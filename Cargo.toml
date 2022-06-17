@@ -1,0 +1,14 @@
+[package]
+name = "prodctrl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bb8 = "0.8"
+bb8-tiberius = "0.11"
+clap = { version = "3.2", features = ["derive"] }
+simple_excel_writer = "0.2.0"
+tiberius = { version = "0.9", features = [ "sql-browser-tokio", "integrated-auth-gssapi" ] }
+tokio = "1.18"
