@@ -1,5 +1,5 @@
 
-use workorder_bb8::{App, Error};
+use prodctrl::{App, Error};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
