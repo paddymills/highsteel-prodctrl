@@ -4,15 +4,23 @@ use bb8_tiberius::{ConnectionManager};
 use tiberius::{AuthMethod, Config, Query};
 
 use crate::part::Part;
+use crate::cli::CliMenuApp;
 
 const HOST: &str = "HSSSQLSERV";
 const POOL_SIZE: u32 = 2;
 
-pub struct App {
-    pub pool: Pool<ConnectionManager>
+pub struct App<T>
+where
+    T: CliMenuApp
+{
+    pub pool: Pool<ConnectionManager>,
+    pub app: T,
 }
 
-impl App {
+impl<T> App<T>
+where
+    T: CliMenuApp
+{
     pub async fn new() -> Self {
         let mut config = Config::new();
         config.host(HOST);
@@ -28,7 +36,7 @@ impl App {
             .max_size(POOL_SIZE)
             .build(mgr)
             .await {
-                Ok(pool) => Self { pool },
+                Ok(pool) => Self { pool, app: T::init() },
                 Err(_) => panic!("Pool failed to build")
             }
     }

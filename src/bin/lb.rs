@@ -3,12 +3,13 @@ use simple_excel_writer::*;
 
 use prodctrl::{
     App,
+    cli::JobShipCli,
     part::Part
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let app = App::new().await;
+    let app = App::<JobShipCli>::new().await;
     let dwg = Some(String::from("167"));
 
     let mut wb = Workbook::create("C:\\temp\\1190163A-1_LB.xlsx");
