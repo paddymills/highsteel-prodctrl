@@ -1,12 +1,12 @@
 
 use bb8::Pool;
-use bb8_tiberius::{ConnectionManager};
-use tiberius::{AuthMethod, Config, Query};
+use bb8_tiberius::ConnectionManager;
+use tiberius::Query;
 
+use crate::db::HssConfig;
 use crate::part::Part;
 use crate::cli::CliMenuApp;
 
-const HOST: &str = "HSSSQLSERV";
 const POOL_SIZE: u32 = 2;
 
 pub struct App<T>
@@ -22,12 +22,7 @@ where
     T: CliMenuApp
 {
     pub async fn new() -> Self {
-        let mut config = Config::new();
-        config.host(HOST);
-        config.authentication(AuthMethod::Integrated);
-        config.trust_cert();
-
-        let mgr = match ConnectionManager::build(config) {
+        let mgr = match ConnectionManager::build(HssConfig::Bom) {
             Ok(conn_mgr) => conn_mgr,
             Err(_) => panic!("ConnectionManager failed to connect to database")
         };

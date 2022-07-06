@@ -10,12 +10,34 @@ repository = "https://github.com/paddymills/highsteel-prodctrl"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = "0.4"
+csv = "1.1"
+figment = { version = "0.10", features = ["env", "toml"] }
+lazy_static = "1.4"
+uncased = "0.9"
+rayon = "1.5"
+regex = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+simple_excel_writer = "0.2.0"
+
+# cli and progress
+clap = { version = "3.2", features = ["derive"] }
+linya = "0.3"
+nutmeg = "0.1"
+requestty = "0.4"
+
+# MSSQL database
 bb8 = "0.8"
 bb8-tiberius = "0.11"
-clap = { version = "3.2", features = ["derive"] }
-phf = { version = "0.10", features = ["macros"] }
-regex = "1.5"
-requestty = "0.4"
-simple_excel_writer = "0.2.0"
 tiberius = { version = "0.9", features = [ "sql-browser-tokio", "integrated-auth-gssapi" ] }
-tokio = "1.18"
+
+# async libs
+async_once = "0.2"
+# console-subscriber = "0.1"
+futures = "0.3"
+# tokio = { version = "1.19", features = ["net", "rt-multi-thread", "sync"] }
+tokio = { version = "1.19", features = ["full"] }
+tokio-util = { version = "0.7", features = ["compat"] }
+
+[dev-dependencies]
+figment = { version = "0.10", features = ["env", "test", "toml"] }

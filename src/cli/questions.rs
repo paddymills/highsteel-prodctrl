@@ -36,3 +36,39 @@ pub fn shipment() -> u32 {
 
         prompt_one(question).unwrap().as_int().unwrap() as u32
 }
+
+#[cfg(test)]
+mod regex_tests {
+    
+    #[test]
+    fn validation_set() {
+        let validation_set_re = regex::RegexSet::new(&[
+            r"^\d{1,7}$",
+            r"^\d{7}[[:alpha:]]$"
+        ]).unwrap();
+    
+        // passes
+        vec!["1", "11", "116", "1160", "11602", "116025", "1160253", "1160253A", "1160253a"]
+            .iter()
+            .for_each(|t| assert!(validation_set_re.is_match(t)));
+        
+        // failures
+        vec!["a", "1a", "11a", "116a", "1160a", "11602a", "116025a", "11602531", "1160253A1", "1160253aa"]
+            .iter()
+            .for_each(|t| assert!(!validation_set_re.is_match(t)));
+    }
+
+    #[test]
+    fn job() {
+        let job_re = regex::Regex::new( r"^\d{7}[[:alpha:]]$" ).unwrap();
+
+        // passes
+        assert!(job_re.is_match("1200055c"));
+        assert!(job_re.is_match("1180223A"));
+
+        // failures
+        assert!(!job_re.is_match("120055c"));
+        assert!(!job_re.is_match("12000055c"));
+        assert!(!job_re.is_match("1200055"));
+    }
+}

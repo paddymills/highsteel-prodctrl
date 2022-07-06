@@ -1,59 +1,105 @@
 
-mod cnf_file_row;
 
-pub use cnf_file_row::CnfFileRow;
+mod row;
+mod processor;
 
-pub mod cnf_file_index {
+pub use row::*;
+pub use processor::ProdFileProcessor;
 
-    use phf::phf_map;
+pub mod paths {
+    use regex::Regex;
+    use std::{
+        io::Error,
+        path::PathBuf,
+    };
 
-    pub const PART_NAME: usize = 0;
-    pub const PART_JOB:  usize = 1;
-    pub const PART_WBS:  usize = 2;
-    pub const PART_QTY:  usize = 4;
-    
-    pub const MATL_NAME: usize = 6;
-    pub const MATL_WBS:  usize = 7;
-    pub const MATL_QTY:  usize = 8;
-    pub const MATL_LOC:  usize = 10;
-    
-    pub const PLANT:     usize = 11;
-    pub const PROGRAM:   usize = 12;
+    lazy_static! {
+        // paths
+        pub static ref CNF_FILES: PathBuf = PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test");
 
-    pub static INDEX: phf::Map<&'static str, u32> = phf_map! {
-        "part-name" =>  0,
-        "part-job"  =>  1,
-        "part-wbs"  =>  2,
-        "part-qty"  =>  4,
+        // regex
+        static ref PROD_FILE_NAME: Regex = Regex::new(r"Production_(\d{14}).ready").expect("failed to build regex");
+    }
+
+    pub fn get_ready_files() -> Result<Vec<PathBuf>, Error> {
+        let files = std::fs::read_dir(&*CNF_FILES)?
+            .filter_map(|f| f.ok())
+            .filter(|f| PROD_FILE_NAME.is_match(f.file_name().to_str().unwrap_or("skip file")))
+            .map(|f| f.path().to_path_buf())
+            .collect::<Vec<PathBuf>>();
+
+        Ok(files)
+    }
+
+    pub trait CnfFilePaths {
+        fn new_prod_file() -> Self;
+        fn new_issue_file() -> Self;
+        fn archive_file(self: &Self) -> Self;
+        fn backup_file(self: &Self) -> Self;
+        fn issue_file(self: &Self) -> Self;
+    }
+
+    impl CnfFilePaths for PathBuf {
+        fn new_prod_file() -> Self {
+            let mut path = CNF_FILES.clone();
+            path.push( chrono::Local::now().format("Production_%Y%m%d%H%M%S.ready").to_string() );
+
+            path
+        }
+
+        fn new_issue_file() -> Self {
+            let mut path = CNF_FILES.clone();
+            path.push( chrono::Local::now().format("Issue_%Y%m%d%H%M%S.ready").to_string() );
+
+            path
+        }
         
-        "matl-name" =>  6,
-        "matl-wbs"  =>  7,
-        "matl-qty"  =>  8,
-        "matl-loc"  => 10,
+        fn archive_file(self: &Self) -> Self {
+            let mut path = CNF_FILES.clone();
+            path.push("archive");
 
-        "plant"     => 11,
-        "program"   => 12,
-    };
+            // safe to unwrap Option<&OsStr> here
+            //  because we will assume whoever consumes this api
+            //  is not dumb enough to call it on a folder or path ending in '..'
+            path.push(self.file_name().unwrap());
+        
+            path
+        }
+        
+        fn backup_file(self: &Self) -> Self {
+            let mut path = CNF_FILES.clone();
+            path.push("backup");
 
-    /// panicing version of `INDEX.get()`
-    /// for when keys are known
-    pub fn get(key: &str) -> usize {
-        match INDEX.get(key) {
-            Some(&val) => val as usize,
-            None       => unreachable!()
+            // safe to unwrap Option<&OsStr> here
+            //  because we will assume whoever consumes this api
+            //  is not dumb enough to call it on a folder or path ending in '..'
+            path.push(self.file_name().unwrap());
+        
+            path
+        }
+        
+        fn issue_file(self: &Self) -> Self {
+            let mut path = CNF_FILES.clone();
+
+            // safe to unwrap Option<&OsStr> and Option<&str> here
+            //  because we already checked that it is a file
+            path.push( self.file_name().unwrap().to_str().unwrap().replace("Production", "Issue") );
+        
+            path
         }
     }
+}
 
-    pub fn max_index() -> u32 {
-        match INDEX.into_iter().max() {
-            Some((_key, &val)) => val,
-            None               => 0
-        }
+#[cfg(test)]
+mod tests {
+    use super::paths::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_paths() {
+        let test_file = PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\Production_20220105083000.ready");
+        assert_eq!(test_file.archive_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\archive\Production_20220105083000.ready"));
+        assert_eq!(test_file.backup_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\backup\Production_20220105083000.ready"));
+        assert_eq!(test_file.issue_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\Issue_20220105083000.ready"));
     }
-
-    pub static ADDL: phf::Map<u32, &'static str> = phf_map! {
-        3u32 => "PROD",
-        5u32 => "EA",
-        9u32 => "IN2",
-    };
 }
