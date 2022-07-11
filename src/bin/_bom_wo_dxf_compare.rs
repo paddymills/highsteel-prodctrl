@@ -207,5 +207,7 @@ fn get_mark(row: &tiberius::Row) -> String {
 enum Process {
     WorkOrder(i32),
     Bom(i32),
+
+    #[allow(dead_code)]
     Dxf
 }

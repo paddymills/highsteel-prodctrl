@@ -13,6 +13,7 @@ repository = "https://github.com/paddymills/highsteel-prodctrl"
 chrono = "0.4"
 csv = "1.1"
 figment = { version = "0.10", features = ["env", "toml"] }
+glob = "0.3"
 lazy_static = "1.4"
 uncased = "0.9"
 rayon = "1.5"
@@ -20,10 +21,15 @@ regex = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 simple_excel_writer = "0.2.0"
 
+# logging
+log = "0.4"
+simplelog = "0.12"
+
 # cli and progress
 clap = { version = "3.2", features = ["derive"] }
 linya = "0.3"
 nutmeg = "0.1"
+pbr = "1.0"
 requestty = "0.4"
 
 # MSSQL database
@@ -37,6 +43,7 @@ async_once = "0.2"
 futures = "0.3"
 # tokio = { version = "1.19", features = ["net", "rt-multi-thread", "sync"] }
 tokio = { version = "1.19", features = ["full"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 
 [dev-dependencies]
