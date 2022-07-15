@@ -1,6 +1,11 @@
 
+mod api;
 mod driver;
-
-pub use driver::BomWoDxfCompare;
+mod progress;
 pub mod actors;
-pub mod task;
+
+pub use api::*;
+pub use driver::BomWoDxfCompare;
+pub use progress::ProgressBars;
+
+pub use tokio::sync::mpsc as DriverChannel;

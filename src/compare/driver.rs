@@ -1,21 +1,21 @@
 
-use pbr;
 use simple_excel_writer::*;
 use simplelog::{LevelFilter, Config, WriteLogger};
-use tokio::sync::broadcast;
-// use tokio_stream::{wrappers::BroadcastStream, StreamExt};
-use rayon::prelude::*;
-
-use std::collections::BTreeMap;
 use std::fs::File;
+
+use tokio::sync::mpsc;
+use rayon::prelude::*;
 use std::sync::Mutex;
 
-use super::task::{JobShip, PartCompare, Task};
+
 use super::actors::*;
+use super::{ api::{JobShip, PartCompare}, ProgressBars };
 use crate::Error;
 
+use std::collections::BTreeMap;
 type PartMap = BTreeMap<String, PartCompare>;
 type JobShipMap = BTreeMap<JobShip, PartMap>;
+
 
 pub struct BomWoDxfCompare {
     map: JobShipMap
@@ -33,113 +33,85 @@ impl BomWoDxfCompare {
     }
 
     pub async fn main(&mut self) -> Result<&mut Self, Error> {
-        let (tx, mut rx)  = broadcast::channel(1_000_000);
 
-        let mb = pbr::MultiBar::new();
-        let mut jobs_b = mb.create_bar(0);
-        let mut bom_b = mb.create_bar(0);
-        let mut sn_b = mb.create_bar(0);
-        let mut dxf_b = mb.create_bar(0);
+        let mut bars = ProgressBars::new();
+        bars.tick_all();
+        
+        let (tx, mut rx) = mpsc::channel(256);
+        let db = ActorHandle::new(tx).await;
 
-        jobs_b.message("Jobs ");
-        bom_b.message("Parts > Bom ");
-        sn_b.message("Parts > Sn ");
-        dxf_b.message("Parts > Dxf ");
+        db.send( ActorTask::GetJobs );
+        while let Some(response) = rx.recv().await {
+            debug!("Got response: {:?}", response);
 
-        std::thread::spawn(move || { mb.listen(); });
-
-        let [tx1, tx2, _tx3] = [0; 3].map(|_| tx.clone());
-        let actors = vec![
-            tokio::spawn(async move { bom_actor(tx1).await.unwrap() }),
-            tokio::spawn(async move { sndb_actor(tx2).await.unwrap() }),
-            // tokio::spawn(async move { dxf_actor(tx3).await.unwrap() }),
-        ];
-
-        let mut total = 0u8;
-        let mut tasks_started = false;
-        let mut tasks = 0usize;
-        loop {
-            let result = rx.recv().await;
-            
-            if let Err(e) = result {
-                println!("driver lagged");
-                error!("broadcast error: {:?}", e);
-
-                // tx.send(Task::Stop)?;
-                // break;
-                continue;
-            }
-            
-            debug!("{:?}", result);
-            match result.unwrap() {
-                Task::Init(i) => {
-                    total += i;
-                    
-                    if total == actors.len() as u8 {
-                        debug!("All actors subscribed");
-                        tx.send(Task::GetJobs)?;
-                    }
-                },
-                Task::Job(js) => {
+            match response {
+                ActorResult::Job(js) => {
+                    bars.inc_job();
                     self.map.insert(js.clone(), PartMap::new());
-                    tx.send(Task::GetParts(js))?;
-                    
-                    jobs_b.total += 1;
-                    jobs_b.inc();
+
+                    db.send( ActorTask::GetJob { js } );
                 },
-                Task::Part(js, mark, cmp) => {
-                    self.map.get_mut(&js).unwrap().insert(mark.clone(), cmp);
+                ActorResult::JobProcessed(_js) => { bars.jobs.inc(); },
+                ActorResult::Bom(js, mark, qty) => {
 
-                    tx.send(Task::GetWorkOrder(js.clone(), mark.clone()))?;
-                    tx.send(Task::GetDxf(js.clone(), mark.clone()))?;
+                    self.map
+                        .get_mut(&js).unwrap()
+                        .insert(mark.clone(), PartCompare { workorder: 0, bom: qty, dxf: false });
 
-                    bom_b.total += 1;
-                    sn_b.total += 1;
-                    dxf_b.total += 1;
-                    
-                    bom_b.inc();
-                    sn_b.tick();
-                    dxf_b.tick();
+                    bars.inc_part();
+                    bars.bom.inc();
 
-                    tasks_started = true;
-                    tasks += 2;
+                    let js = js.clone();
+                    let mark = mark.clone();
+                    db.send( ActorTask::GetPart { js, mark } );
                 },
-                Task::WorkOrder(js, mark, qty) => {
-                    self.map.get_mut(&js).unwrap().get_mut(&mark).unwrap().workorder += qty;
+                ActorResult::WorkOrder(js, mark, qty) => {
+                    self.map
+                        .get_mut(&js).unwrap()
+                        .get_mut(&mark).unwrap()
+                        .workorder = qty;
 
-                    sn_b.inc();
-                    tasks -= 1;
+                    bars.sndb.inc();
                 },
-                Task::Dxf(js, mark) => {
-                    self.map.get_mut(&js).unwrap().get_mut(&mark).unwrap().dxf = true;
+                ActorResult::Dxf(js, mark) => {
+                    self.map
+                        .get_mut(&js).unwrap()
+                        .get_mut(&mark).unwrap()
+                        .dxf = true;
 
-                    dxf_b.inc();
-                    tasks -= 1;
+                    bars.dxf_sn.inc();
                 },
-                Task::NoDxf => {
-                    // dxf_b.inc();
-                    tasks -= 1;
+                ActorResult::NoDxf => {
+                    bars.dxf_sn.inc();
+                    bars.dxf_fs.total += 1;
                 },
-                _ => ()
-            };
+                _ => {
+                    debug!("Received unmatched response: {:?}", response)
+                }
+            }
 
-            if tasks_started && tasks == 0 {
-                tx.send(Task::Stop)?;
+            if db.is_done().await {
                 break;
             }
         }
 
-        let dxf_b = Mutex::new(dxf_b);
+        let dxf_b = Mutex::new(bars.dxf_fs);
         self.map
             .par_iter_mut()
             .for_each(|(js, v)| {
                 v.par_iter_mut()
                     .filter(|(_, v)| !v.dxf)
                     .for_each(|(mark, v)| {
-                        v.dxf = find_dxf(js, mark);
+                        v.dxf = find_dxf_file(js, mark);
                         dxf_b.lock().unwrap().inc();
                     });
             });
+
+        bars.jobs.finish();
+        bars.bom.finish();
+        bars.sndb.finish();
+        bars.dxf_sn.finish();
+        dxf_b.lock().unwrap().finish();
 
         Ok(self)
     }
@@ -149,7 +121,7 @@ impl BomWoDxfCompare {
         let mut wb = Workbook::create(path);
         let mut sheet = wb.create_sheet("Compare");
         wb.write_sheet(&mut sheet, |sw| {
-            sw.append_row(row!["Job", "Mark", "Work Order", "Bom","Delta", "Dxf"])?;
+            sw.append_row(row!["Job", "Mark", "Work Order", "Bom", "Delta", "Dxf"])?;
             for (js, parts) in self.map.iter() {
                 let js = format!("{}-{}", js.job, js.ship);
                 
@@ -162,7 +134,7 @@ impl BomWoDxfCompare {
                         mark.as_str(),
                         v.workorder as f64,
                         v.bom as f64,
-                        (v.workorder - v.bom) as f64,
+                        v.workorder as f64 - v.bom as f64,
                         if v.dxf { "YES" } else { "NO" }
                     ])?;
                 }

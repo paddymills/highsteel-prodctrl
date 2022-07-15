@@ -1,48 +1,77 @@
 
-use bb8_tiberius::IntoConfig;
-use tiberius::Client;
-use tokio::net::TcpStream;
-use tokio_util::compat::*;
-use tokio::sync::broadcast;
+pub mod bom_db {
+    use async_once::AsyncOnce;
+    use bb8::Pool;
+    use bb8_tiberius::ConnectionManager;
+    
+    use super::super::*;
+    use crate::{Error, part::Part};
+    
+    const POOL_SIZE: u32 = ACTORS as u32;
+    
+    lazy_static!(
+        static ref BOM_POOL: AsyncOnce<Pool<ConnectionManager>> = AsyncOnce::new( async {
+            debug!("****************************************");
+            debug!("** init Bom db pool  *******************");
+            debug!("****************************************");
+    
+            let pool = match Pool::builder()
+                .max_size(POOL_SIZE)
+                .build(
+                    match ConnectionManager::build(crate::db::HssConfig::Bom) {
+                        Ok(conn_mgr) => conn_mgr,
+                        Err(_) => panic!("ConnectionManager failed to connect to database")
+                    }
+                )
+                .await {
+                    Ok(pool) => pool,
+                    Err(_) => panic!("Bom Pool failed to build")
+                };
+        
+            pool    
+        });
+    );
 
-use super::task::*;
-use crate::{db, Error, part::Part};
+    pub async fn get_parts(sender: ActorSender, js: JobShip) -> Result<(), Error> {
+        debug!("Getting parts for {}", js);
 
-pub async fn bom_actor(tx: broadcast::Sender<Task>) -> Result<(), Error> {
-    let mut rx = tx.subscribe();
-    tx.send(Task::Init(1))?;
+        // let mut results: Vec<ActorResult> = BOM_POOL
+        //     .get().await    // AsyncOnce
+        //     .get().await?   // Pool
+        //     .query(
+        //         "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
+        //         &[&js.job, &js.ship]
+        //     )
+        //     .await?
+        //     .into_first_result().await?
+        //     .into_iter()
+        //     .map(|row| Part::from(row))
+        //     .filter(|part| part.is_pl())
+        //     .map(|part| ActorResult::Bom(js.clone(), part.mark, part.qty as Qty) )
+        //     .collect();
 
-    let bom_cfg = db::HssConfig::Bom.into_config()?;
-    let bom_tcp = TcpStream::connect(bom_cfg.get_addr()).await?;
-    bom_tcp.set_nodelay(true)?;
+        let iter = BOM_POOL
+            .get().await    // AsyncOnce
+            .get().await?   // Pool
+            .query(
+                "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
+                &[&js.job, &js.ship]
+            )
+            .await?
+            .into_first_result().await?
+            .into_iter()
+            .map(|row| Part::from(row))
+            .filter(|part| part.is_pl());
 
-    let mut client = Client::connect( bom_cfg, bom_tcp.compat_write() ).await?;
+        for part in iter {
+            let sender = sender.clone();
+            let res = ActorResult::Bom(js.clone(), part.mark, part.qty as Qty);
 
-    debug!("Bom db actor initialized. awaiting tasks...");
-    while let Ok(task) = rx.recv().await {
-        match task {
-            Task::GetParts(js) => {
-                debug!("Getting parts for {}", js);
-
-                client
-                    .query(
-                        "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
-                        &[&js.job, &js.ship]
-                    )
-                    .await?
-                    .into_first_result().await?
-                    .into_iter()
-                    .map(|row| Part::from(row))
-                    .filter(|part| part.is_pl())
-                    .map(|part| Task::Part(js.clone(), part.mark, PartCompare { bom: part.qty, ..Default::default() }) )
-                    .for_each(|result| {
-                        tx.send( result ).unwrap();
-                    });
-            },
-            Task::Stop => break,
-            _ => ()
+            tokio::spawn(async move { let _ = sender.send( res ).await; });
         }
-    }
 
-    Ok(())
+        tokio::spawn(async move { let _ = sender.send( ActorResult::JobProcessed(js.clone()) ).await; });
+
+        Ok(())
+    }
 }
