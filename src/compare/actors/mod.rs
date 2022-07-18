@@ -1,23 +1,13 @@
 
 mod actor;
-mod bom;
-mod dxf;
-mod handle;
-mod sndb;
+mod db;
+mod job;
+mod part;
 
-pub use super::*;
+pub use super::api;
+pub use crate::part::Part;
+
 pub use actor::*;
-pub use bom::bom_db;
-pub use dxf::*;
-pub use handle::*;
-pub use sndb::sn_db;
-
-type Mark = String;
-type Qty = u32;
-
-pub use crossbeam::channel as QueueChannel;
-pub use tokio::sync::mpsc as ResultChannel;
-pub type ActorReceiver  = QueueChannel::Receiver<ActorTask>;
-pub type ActorSender    = ResultChannel::Sender<ActorResult>;
-pub type HandleReceiver = ResultChannel::Receiver<ActorResult>;
-pub type HandleSender   = QueueChannel::Sender<ActorTask>;
+pub use db::{BOM_POOL, SNDB_POOL};
+pub use job::JobActorHandle;
+pub use part::PartActorHandle;

@@ -6,8 +6,8 @@ use super::{JobShip, Mark};
 
 #[derive(Debug, Default)]
 pub struct QtyAndNested {
-    qty: u32,
-    nested: bool
+    pub qty: u32,
+    pub nested: bool
 }
 
 impl From<&Row> for QtyAndNested {
@@ -23,15 +23,15 @@ impl From<&Row> for QtyAndNested {
 }
 
 #[async_trait]
-pub trait PartDbOps {
+pub trait SnDbOps {
     async fn get_jobs(&mut self) -> Vec<JobShip>;
-    async fn qty_and_nested(&mut self, js: JobShip, mark: Mark) -> QtyAndNested;
-    async fn archive_qty_and_nested(&mut self, js: JobShip, mark: Mark) -> QtyAndNested;
-    async fn imported(&mut self, js: JobShip, mark: Mark) -> bool;
+    async fn qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested;
+    async fn archive_qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested;
+    async fn imported(&mut self, js: &JobShip, mark: &Mark) -> bool;
 }
 
 #[async_trait]
-impl PartDbOps for Client {
+impl SnDbOps for Client {
     async fn get_jobs(&mut self) -> Vec<JobShip> {
         debug!("Getting jobs list");
 
@@ -42,66 +42,76 @@ impl PartDbOps for Client {
                 WHERE WONumber LIKE '%-%' AND Data1 LIKE '1%'
                 GROUP BY Data1, Data2
             ")
-            .await?
-            .into_first_result().await?
+            .await.expect("failed to query for jobs")
+            .into_first_result().await.expect("failed to get jobs list from results")
             .into_iter()
             .map(|row| JobShip::from(&row) )
             .collect()
     }
 
-    async fn qty_and_nested(&mut self, js: JobShip, mark: Mark) -> QtyAndNested {
-        match self
-            .query(
-            "
-                SELECT
-                    SUM(QtyOrdered) AS Qty,
-                    SUM(QtyCompleted) AS Nested
-                FROM Part
-                WHERE   PartName LIKE @P3
-                    AND Data1=@P1
-                    AND Data2=@P2
-                    AND WONumber LIKE '%-%'
-                GROUP BY PartName
-            ", &[&js.job, &js.ship, &format!("{}_{}", js.job, mark)]
-            ).await?
-            .into_row().await? {
-                Some(row) => row.into(),
-                None => self.archive_qty_and_nested(js, mark).await
-            }
-    }
-
-    async fn archive_qty_and_nested(&mut self, js: JobShip, mark: Mark) -> QtyAndNested {
-        match self
-            .query(
-            "
-                SELECT
-                    SUM(QtyOrdered) AS Qty,
-                    SUM(QtyProgram) AS Nested
-                FROM PartArchive
-                WHERE   PartName LIKE @P3
-                    AND Data1=@P1
-                    AND Data2=@P2
-                    AND WONumber LIKE '%-%'
-                GROUP BY PartName
-            ", &[&js.job, &js.ship, &format!("{}_{}", js.job, mark)]
-            ).await?
-            .into_row().await? {
-                Some(row) => row.into(),
-                None => QtyAndNested::default()
-            }
-    }
-
-    async fn imported(&mut self, js: JobShip, mark: Mark) -> bool {
-        self
-            .query(
+    async fn qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested {
+        match async {
+            self
+                .query(
                 "
-                    SELECT 1
-                    FROM PartsLibrary
-                    WHERE PartName=@P1
-                ", &[&format!("{}_{}", js.job, mark)]
-            ).await?
-            .into_row().await?
-            .is_some()
+                    SELECT
+                        SUM(QtyOrdered) AS Qty,
+                        SUM(QtyCompleted) AS Nested
+                    FROM Part
+                    WHERE   PartName LIKE @P3
+                        AND Data1=@P1
+                        AND Data2=@P2
+                        AND WONumber LIKE '%-%'
+                    GROUP BY PartName
+                ", &[&js.job, &js.ship, &format!("{}_{}", js.job, mark)]
+                ).await?
+                .into_row().await
+            }.await {
+                Ok(Some(row)) => QtyAndNested::from(&row),
+                _             => self.archive_qty_and_nested(js, mark).await
+            }
+    }
+
+    async fn archive_qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested {
+        match async {
+            self
+                .query(
+                "
+                    SELECT
+                        SUM(QtyOrdered) AS Qty,
+                        SUM(QtyProgram) AS Nested
+                    FROM PartArchive
+                    WHERE   PartName LIKE @P3
+                        AND Data1=@P1
+                        AND Data2=@P2
+                        AND WONumber LIKE '%-%'
+                    GROUP BY PartName
+                ", &[&js.job, &js.ship, &format!("{}_{}", js.job, mark)]
+                ).await?
+                .into_row().await
+            }.await {
+                Ok(Some(row)) => QtyAndNested::from(&row),
+                _             => QtyAndNested::default()
+            }
+    }
+
+    async fn imported(&mut self, js: &JobShip, mark: &Mark) -> bool {
+        if let Ok(Some(_)) = async {
+            self
+                .query(
+                    "
+                        SELECT 1
+                        FROM PartsLibrary
+                        WHERE PartName=@P1
+                    ", &[&format!("{}_{}", js.job, mark)]
+                )
+                .await?
+                .into_row()
+                .await
+            }.await
+        {  return true }
+
+        false
     }
 
 }

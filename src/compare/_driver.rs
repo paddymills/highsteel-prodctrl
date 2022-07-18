@@ -1,3 +1,4 @@
+
 use simple_excel_writer::*;
 use simplelog::{LevelFilter, Config, WriteLogger};
 use std::fs::File;
@@ -9,7 +10,7 @@ use std::sync::Mutex;
 
 use super::actors::*;
 use super::{
-    api::{find_dxf_file, SnDbOps},
+    api::PartCompare,
     JobShipMap,
     ProgressBars
 };
@@ -36,32 +37,62 @@ impl BomWoDxfCompare {
         let mut bars = ProgressBars::new();
         bars.tick_all();
         
-        let jobs = SNDB_POOL
-            .get()      // AsyncOnce
-                .await
-            .get()      // Pool
-                .await
-                .expect("Failed to get Bom db client")
-            .get_jobs()
-                .await;
+        let (tx, mut rx) = mpsc::channel(256);
+        let db = ActorHandle::new(tx).await;
 
-        let (tx, mut rx) = mpsc::channel(16);
-        for js in jobs {
-            bars.inc_job();
+        db.send( ActorTask::GetJobs );
+        while let Some(response) = rx.recv().await {
+            debug!("Got response: {:?}", response);
 
-            let tx = tx.clone();
-            tokio::spawn(async move {
-                let actor = JobActorHandle::new();
-                let result = actor.send(js).await;
+            match response {
+                ActorResult::Job(js) => {
+                    bars.inc_job();
+                    self.map.insert(js.clone(), PartMap::new());
 
-                let _ = tx.send(result).await;
-            });
-        }
+                    db.send( ActorTask::GetJob { js } );
+                },
+                ActorResult::JobProcessed(_js) => { bars.jobs.inc(); },
+                ActorResult::Bom(js, mark, qty) => {
 
-        drop(tx);
-        while let Some((js, map)) = rx.recv().await {
-            let _ = self.map.insert(js, map);
-            bars.jobs.inc();
+                    self.map
+                        .get_mut(&js).unwrap()
+                        .insert(mark.clone(), PartCompare { workorder: 0, bom: qty, dxf: false });
+
+                    bars.inc_part();
+                    bars.bom.inc();
+
+                    let js = js.clone();
+                    let mark = mark.clone();
+                    db.send( ActorTask::GetPart { js, mark } );
+                },
+                ActorResult::WorkOrder(js, mark, qty) => {
+                    self.map
+                        .get_mut(&js).unwrap()
+                        .get_mut(&mark).unwrap()
+                        .workorder = qty;
+
+                    bars.sndb.inc();
+                },
+                ActorResult::Dxf(js, mark) => {
+                    self.map
+                        .get_mut(&js).unwrap()
+                        .get_mut(&mark).unwrap()
+                        .dxf = true;
+
+                    bars.dxf_sn.inc();
+                },
+                ActorResult::NoDxf => {
+                    bars.dxf_sn.inc();
+                    bars.dxf_fs.total += 1;
+                },
+                _ => {
+                    debug!("Received unmatched response: {:?}", response)
+                }
+            }
+
+            if db.is_done().await {
+                break;
+            }
         }
 
         let dxf_b = Mutex::new(bars.dxf_fs);

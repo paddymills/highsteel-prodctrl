@@ -1,6 +1,10 @@
 
 use std::fmt::{Display, Formatter, Result};
 
+use super::Mark;
+
+pub type JobShipMark = (JobShip, Mark);
+
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct JobShip {
     pub job: String,
@@ -21,3 +25,13 @@ impl Display for JobShip {
         write!(f, "{}-{}", self.job, self.ship)
     }
 }
+
+// pub struct JobShipMark {
+//     pub job: String,
+//     pub ship: String,
+//     pub mark: Mark
+// }
+
+// impl JobShipMark {
+//     pub fn from(js: JobShip, mark: Mark)
+// }

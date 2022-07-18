@@ -21,4 +21,3 @@ pub fn find_dxf_file(js: &JobShip, mark: &String) -> bool {
 
     false
 }
-
