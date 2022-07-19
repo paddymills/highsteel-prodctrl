@@ -1,11 +1,13 @@
+
 use simple_excel_writer::*;
 use simplelog::{LevelFilter, Config, WriteLogger};
 use std::fs::File;
 
-use tokio::sync::mpsc;
+use crossbeam::channel;
 use rayon::prelude::*;
+use tokio::sync::mpsc;
 use std::sync::Mutex;
-
+use std::thread;
 
 use super::actors::*;
 use super::{
@@ -14,7 +16,6 @@ use super::{
     ProgressBars
 };
 use crate::Error;
-
 
 pub struct BomWoDxfCompare {
     map: JobShipMap
@@ -36,31 +37,29 @@ impl BomWoDxfCompare {
         let mut bars = ProgressBars::new();
         bars.tick_all();
         
-        let jobs = SNDB_POOL
-            .get()      // AsyncOnce
-                .await
-            .get()      // Pool
-                .await
-                .expect("Failed to get Bom db client")
-            .get_jobs()
-                .await;
+        let jobs = get_sndb_pool().await
+            .get().await
+                .expect("Failed to get Sn db client")
+            .get_jobs().await;
 
-        let (tx, mut rx) = mpsc::channel(16);
+        let (txq, rxq) = channel::bounded(16);
         for js in jobs {
             bars.inc_job();
-
-            let tx = tx.clone();
-            tokio::spawn(async move {
-                let actor = JobActorHandle::new();
-                let result = actor.send(js).await;
-
-                let _ = tx.send(result).await;
+            
+            let tx = txq.clone();
+            thread::spawn(move || {
+                let _ = tx.send(js);
             });
         }
+        drop(txq);
+        
+        let (tx, mut rx) = mpsc::channel(16);
+        tokio::spawn( spawn_actors(tx, rxq) );
 
-        drop(tx);
-        while let Some((js, map)) = rx.recv().await {
-            let _ = self.map.insert(js, map);
+        while let Some(res) = rx.recv().await {
+            debug!("Received result: {}", res.js);
+
+            let _ = self.map.insert(res.js, res.parts);
             bars.jobs.inc();
         }
 

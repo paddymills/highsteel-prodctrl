@@ -1,83 +1,32 @@
 
-use tokio::sync::{mpsc, oneshot};
+use crossbeam::channel;
+use tokio::sync::mpsc;
 
-use super::{actor::*, SNDB_POOL};
-use super::api::{SnDbOps, JobShip, Mark, JobShipMark, PartCompare};
+use super::{
+    get_sndb_pool,
+    actor::*,
+    api::{SnDbOps, JobShipMark, PartCompare}
+};
 
-pub struct PartActorHandle {
-    sender: mpsc::Sender<ActorMessage>
-}
+type Sender = mpsc::Sender<PartResults>;
+type Receiver = channel::Receiver<JobShipMark>;
 
-type ResultTuple = (Mark, PartCompare);
 
-#[async_trait]
-impl Handle<JobShipMark, ResultTuple> for PartActorHandle {
-    fn new() -> Self {
-        let (sender, recv) = mpsc::channel(8);
-        let actor = PartActor::new(recv);
-        tokio::spawn(PartActor::run_actor(actor));
+pub async fn run_part_actor(results: Sender, queue: Receiver) {
+    while let Ok((js, mark, qty)) = queue.recv() {
+        debug!("Getting Sn data for {}_{}", js, mark);
 
-        Self { sender }
-    }
+        let qn = get_sndb_pool().await
+            .get().await
+                .expect("Failed to get Sndb db client")
+            .qty_and_nested(&js, &mark).await;
 
-    async fn send(&self, vars: JobShipMark) -> ResultTuple {
-        let (send, recv) = oneshot::channel();
-        let msg = ActorMessage::GetPart(vars, send);
+        let compare = PartCompare { workorder: qn.qty, bom: qty, dxf: qn.nested };
 
-        let _ = self.sender.send( msg ).await;
-        let res = recv.await.expect("Part actor task was killed");
+        let res = PartResults { mark, compare };
 
-        match res {
-            ActorResult::Job(_, _) => unreachable!(),
-            ActorResult::Part(mark, comp) => (mark, comp)
-        }
-    }
-}
-
-struct PartActor {
-    receiver: mpsc::Receiver<ActorMessage>
-}
-
-impl PartActor {
-    async fn get_part(js: &JobShip, mark: &Mark) -> PartCompare {
-        let qn = SNDB_POOL
-            .get()      // AsyncOnce
-                .await
-            .get()      // Pool
-                .await
-                .expect("Failed to get Bom db client")
-            .qty_and_nested(&js, &mark)
-                .await;
-
-        PartCompare { workorder: qn.qty, dxf: qn.nested, ..Default::default() }
-    }
-}
-
-#[async_trait]
-impl Actor for PartActor {
-    fn new(receiver: mpsc::Receiver<ActorMessage>) -> Self {
-        Self { receiver }
-    }
-
-    fn handle_message(&mut self, msg: ActorMessage) {
-        use ActorMessage::*;
-
-        match msg {
-            GetPart(jsm, respond_to) => {
-                tokio::spawn(async move {
-                    let (js, mark) = jsm;
-                    let part = Self::get_part(&js, &mark).await;
-                    
-                    let _ = respond_to.send( ActorResult::Part(mark, part) );
-                });
-            },
-            _ => ()
-        }
-    }
-
-    async fn run_actor(mut actor: Self) {
-        while let Some(msg) = actor.receiver.recv().await {
-            actor.handle_message(msg);
+        if let Err(_) = results.send( res ).await {
+            debug!("failed to send Part results");
         }
     }
 }

@@ -1,30 +1,24 @@
 
-use tokio::sync::{mpsc, oneshot};
+use futures::channel::oneshot;
 
 use super::{
-    api::{JobShip, JobShipMark, Mark, PartCompare},
+    api::{JobShip, Mark, PartCompare},
     super::PartMap
 };
 
-pub enum ActorMessage {
-    GetJob(JobShip, oneshot::Sender<ActorResult>),
-    GetPart(JobShipMark, oneshot::Sender<ActorResult>)
+pub struct GetJobShip {
+    pub js: JobShip,
+    pub respond_to: oneshot::Sender<JobShipResults>
 }
 
-pub enum ActorResult {
-    Job(JobShip, PartMap),
-    Part(Mark, PartCompare)
+#[derive(Debug)]
+pub struct JobShipResults {
+    pub js: JobShip,
+    pub parts: PartMap
 }
 
-#[async_trait]
-pub trait Actor {
-    fn new(receiver: mpsc::Receiver<ActorMessage>) -> Self;
-    fn handle_message(&mut self, msg: ActorMessage);
-    async fn run_actor(mut actor: Self);
-}
-
-#[async_trait]
-pub trait Handle<T, R> {
-    fn new() -> Self;
-    async fn send(&self, vars: T) -> R;
+#[derive(Debug)]
+pub struct PartResults {
+    pub mark: Mark,
+    pub compare: PartCompare
 }

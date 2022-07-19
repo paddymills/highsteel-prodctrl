@@ -1,103 +1,93 @@
 
-use tokio::sync::{mpsc, oneshot};
+use crossbeam::channel;
+use tokio::sync::mpsc;
+use std::thread;
+
+use crate::compare::actors::run_part_actor;
 
 use super::{
-    {BOM_POOL, PartActorHandle},
-    actor::*,
+    get_bom_pool,
+    actor::{JobShipResults},
     api::{BomDbOps, JobShip},
     super::PartMap
 };
 
-pub struct JobActorHandle {
-    sender: mpsc::Sender<ActorMessage>
-}
+type Sender = mpsc::Sender<JobShipResults>;
+type Receiver = channel::Receiver<JobShip>;
 
-type ResultMap = (JobShip, PartMap);
+const NUM_JOB_ACTORS: usize = 8;
+const NUM_PART_ACTORS: usize = 4;
+const PART_QUEUE_SIZE: usize = 8 * NUM_PART_ACTORS;
 
-#[async_trait]
-impl Handle<JobShip, ResultMap> for JobActorHandle {
-    fn new() -> Self {
-        let (sender, recv) = mpsc::channel(8);
-        let actor = JobActor::new(recv);
-        tokio::spawn(JobActor::run_actor(actor));
+async fn run_job_actor(results: Sender, queue: Receiver) {
+    while let Ok(js) = queue.recv() {
+        // spawn part workers
+        debug!("Spawning {} part workers", js);
+        let (tx, mut rx) = {
+            // queue channel
+            let (tx_queue, rx_queue) = channel::bounded(PART_QUEUE_SIZE);
+            
+            // results channel
+            let (tx_results, rx_results) = mpsc::channel(PART_QUEUE_SIZE);
 
-        Self { sender }
-    }
+            // spawn actors
+            for _i in 0..NUM_PART_ACTORS {
+                // debug!("Spawning {} part worker {}", js, i);
+                // spawn part actor
+                let (tx, rx) = (tx_results.clone(), rx_queue.clone());
+                tokio::spawn( run_part_actor(tx, rx) );
+            }
 
-    async fn send(&self, js: JobShip) -> ResultMap {
-        let (send, recv) = oneshot::channel();
-        let msg = ActorMessage::GetJob(js, send);
-
-        let _ = self.sender.send( msg ).await;
-        match recv.await.expect("Job actor task was killed") {
-            ActorResult::Job(js, map) => (js, map),
-            ActorResult::Part(_, _) => unreachable!()
-        }
-    }
-}
-
-struct JobActor {
-    receiver: mpsc::Receiver<ActorMessage>
-}
-
-impl JobActor {
-    async fn get_job(js: &JobShip) -> PartMap {
-        let qtys = BOM_POOL
-            .get()      // AsyncOnce
-                .await
-            .get()      // Pool
-                .await
-                .expect("Failed to get Bom db client")
-            .parts_qty(&js)
-                .await;
-
-        let (tx, mut rx) = mpsc::channel(64);
-        for part in qtys {
-            let tx = tx.clone();
+            (tx_queue, rx_results)
+        };
+        
+        {
             let js = js.clone();
             tokio::spawn(async move {
-                let handle = PartActorHandle::new();
-                let (mark, mut comp) = handle.send((js, part.mark)).await;
-                comp.bom = part.qty;
-
-                let _ = tx.send( (mark, comp) ).await;
+                // get parts
+                let qtys = get_bom_pool().await
+                    .get().await
+                        .expect("Failed to get Bom db client")
+                    .parts_qty(&js).await;
+        
+                if qtys.len() == 0 {
+                    debug!("Received no Bom results for {}", js);
+                }
+        
+                for part in qtys {
+                    debug!("got Bom result: {}_{} = {}", js, part.mark, part.qty);
+        
+                    let tx = tx.clone();
+                    let js = js.clone();
+                    thread::spawn(move || {
+                        if tx.is_full() {
+                            debug!("{} queue is full", js);
+                        }
+                        let _ = tx.send( (js, part.mark, part.qty) );
+                    });
+                }
             });
         }
         
-        drop(tx);
-        let mut res: PartMap = PartMap::new();
-        while let Some((mark, compare)) = rx.recv().await {
-            res.insert(mark, compare);
+        // collect results
+        let mut parts: PartMap = PartMap::new();
+        while let Some(res) = rx.recv().await {
+            debug!("Received part result: {}", res.mark);
+            parts.insert(res.mark, res.compare);
         }
-        
-        res
+
+        // send sesult
+        let res = JobShipResults { js, parts };
+        if let Err(_) = results.send( res ).await {
+            debug!("failed to send Job results");
+        }
     }
 }
 
-#[async_trait]
-impl Actor for JobActor {
-    fn new(receiver: mpsc::Receiver<ActorMessage>) -> Self {
-        Self { receiver }
-    }
+pub async fn spawn_actors(tx: Sender, rx: Receiver) {
+    for _ in 0..NUM_JOB_ACTORS {
+        let (tx, rx) = (tx.clone(), rx.clone());
 
-    fn handle_message(&mut self, msg: ActorMessage) {
-        use ActorMessage::*;
-
-        match msg {
-            GetJob(js, respond_to) => {
-                tokio::spawn(async move {
-                    let parts = Self::get_job(&js).await;
-                    
-                    let _ = respond_to.send( ActorResult::Job(js, parts) );
-                });
-            },
-            _ => ()
-        }
-    }
-
-    async fn run_actor(mut actor: Self) {
-        while let Some(msg) = actor.receiver.recv().await {
-            actor.handle_message(msg);
-        }
+        tokio::spawn( run_job_actor(tx, rx) );
     }
 }

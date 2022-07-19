@@ -1,9 +1,9 @@
 
 use std::fmt::{Display, Formatter, Result};
 
-use super::Mark;
+use super::{Mark, Qty};
 
-pub type JobShipMark = (JobShip, Mark);
+pub type JobShipMark = (JobShip, Mark, Qty);
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct JobShip {
