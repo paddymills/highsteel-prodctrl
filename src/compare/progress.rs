@@ -1,4 +1,3 @@
-
 use pbr::{MultiBar, ProgressBar, Pipe};
 
 pub struct ProgressBars {

@@ -3,7 +3,7 @@ use async_once::AsyncOnce;
 use bb8::Pool;
 use bb8_tiberius::ConnectionManager;
 
-const BOM_POOL_SIZE: u32 = 2;
+const BOM_POOL_SIZE: u32 = 8;
 const SNDB_POOL_SIZE: u32 = 32;
 
 lazy_static!(

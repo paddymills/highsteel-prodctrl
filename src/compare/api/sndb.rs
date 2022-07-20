@@ -12,6 +12,14 @@ pub struct QtyAndNested {
 
 impl From<&Row> for QtyAndNested {
     fn from(row: &Row) -> Self {
+        if let None = row.get::<i32, _>("Qty") {
+            error!("Got no Qty for {:?}", row);
+        }
+
+        if let None = row.get::<i32, _>("Nested") {
+            error!("Got no Nested for {:?}", row);
+        }
+
         let qty = row.get::<i32, _>("Qty").unwrap() as u32;
         let nested = match row.get::<i32, _>("Nested").unwrap() {
             0 => false,

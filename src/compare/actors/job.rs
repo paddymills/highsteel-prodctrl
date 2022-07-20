@@ -1,15 +1,15 @@
 
 use crossbeam::channel;
 use tokio::sync::mpsc;
-use std::thread;
+use std::{thread};
 
 use crate::compare::actors::run_part_actor;
 
 use super::{
     get_bom_pool,
-    actor::{JobShipResults},
-    api::{BomDbOps, JobShip},
-    super::PartMap
+    actor::{Actor, JobShipResults},
+    api::{BomDbOps, JobShip, PartCompare},
+    super::PartMap, Message
 };
 
 type Sender = mpsc::Sender<JobShipResults>;
@@ -19,7 +19,46 @@ const NUM_JOB_ACTORS: usize = 8;
 const NUM_PART_ACTORS: usize = 4;
 const PART_QUEUE_SIZE: usize = 8 * NUM_PART_ACTORS;
 
-async fn run_job_actor(results: Sender, queue: Receiver) {
+#[derive(Debug)]
+pub struct JobActor {
+    #[allow(dead_code)]
+    receiver: channel::Receiver<Message>
+}
+
+impl Actor for JobActor {
+    fn new(receiver: channel::Receiver<Message>) -> Self {
+        debug!("Spawning Job Actor");
+
+        let rx = receiver.clone();
+        tokio::spawn(async move {
+            while let Ok(msg) = rx.recv() {
+                match msg {
+                    Message::GetJobShip { js, respond_to } => {
+                        let mut parts = PartMap::new();
+                        
+                        get_bom_pool().await
+                            .get().await
+                                .expect("Failed to get Bom db client")
+                            .parts_qty(&js).await
+                            .into_iter()
+                            .for_each(|res| {
+                                let _ = parts.insert(res.mark, PartCompare { bom: res.qty, ..Default::default() });
+                            });
+                        
+                        let res = JobShipResults { js, parts };
+                
+                        let _ = respond_to.send(res);
+                    },
+                    _ => ()
+                }
+            }
+        });
+
+        Self { receiver }
+    }
+}
+
+pub async fn run_job_actor(results: Sender, queue: Receiver) {
     while let Ok(js) = queue.recv() {
         // spawn part workers
         debug!("Spawning {} part workers", js);
