@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 use super::{actors::*, PartMap};
 use super::{
-    api::{find_dxf_file, SnDbOps},
+    api::SnDbOps,
     JobShipMap
 };
 use crate::Error;
