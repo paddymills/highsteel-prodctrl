@@ -6,7 +6,7 @@ use pbr::MultiBar;
 use simplelog::{LevelFilter, Config, WriteLogger};
 
 use crossbeam::channel;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 use tokio::sync::{mpsc, oneshot};
 use std::thread;
 
@@ -134,6 +134,7 @@ impl BomWoDxfCompare {
                             let tx0 = txp.clone();
                             let (tx1, rx1) = oneshot::channel();
 
+                            // send get part data to worker
                             let js = js.clone();
                             thread::spawn(move || {
                                 let (mark, compare) = part;
@@ -144,6 +145,7 @@ impl BomWoDxfCompare {
                                 debug!("{}", msg)
                             });
 
+                            // increment part progress
                             let tx = tx.clone();
                             let prog = prog.clone();
                             tokio::spawn(async move {
@@ -163,7 +165,7 @@ impl BomWoDxfCompare {
         }
 
         // spawn workers
-        for _ in 0..32 {
+        for _ in 0..64 {
             let _ = BothActor::new(rx0.clone());
         }
 
@@ -179,22 +181,28 @@ impl BomWoDxfCompare {
                 .insert(mark, compare);
         }
 
-        
         let _ = prog.send(Progress::Finish).await;
+        drop(prog);
 
         let lock = map.lock().await;
         self.map = lock.clone();
 
-        println!("checking filesystem for dxf files...");
-        self.map
-            .par_iter_mut()
-            .for_each(|(js, v)| {
-                v.par_iter_mut()
-                    .filter(|(_, v)| !v.dxf)
-                    .for_each(|(mark, v)| {
-                        v.dxf = find_dxf_file(js, mark);
-                    });
-            });
+        // println!("checking filesystem for dxf files...");
+        // let progress = std::sync::Mutex::new(linya::Progress::new());
+        // let bar: linya::Bar = progress.lock().unwrap().bar(total_no_dxf, "Dxf");
+
+        // self.map
+        //     .par_iter_mut()
+        //     .for_each(|(js, v)| {
+        //         v.par_iter_mut()
+        //             .filter(|(_, v)| !v.dxf)
+        //             .for_each(|(mark, v)| {
+        //                 v.dxf = find_dxf_file(js, mark);
+
+        //                 // send increment
+        //                 progress.lock().unwrap().inc_and_draw(&bar, 1);
+        //             });
+        //     });
 
         println!("Processing complete");
 

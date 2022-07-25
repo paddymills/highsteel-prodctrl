@@ -5,7 +5,7 @@ use super::{
     Actor, Message, JobShipResults, PartResults,
     db::{get_bom_pool, get_sndb_pool},
     super::{
-        api::{BomDbOps, SnDbOps, PartCompare},
+        api::{find_dxf_file, BomDbOps, SnDbOps, PartCompare},
         PartMap
     }
 };
@@ -49,6 +49,10 @@ impl Actor for BothActor {
 
                         compare.workorder = qn.qty;
                         compare.dxf = qn.nested;
+
+                        if !compare.dxf {
+                            compare.dxf = find_dxf_file(&js, &mark);
+                        }
 
                         let res = PartResults { js, mark, compare };
                 
