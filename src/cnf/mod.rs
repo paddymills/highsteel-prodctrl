@@ -8,14 +8,12 @@ pub use processor::ProdFileProcessor;
 
 pub mod paths {
     use regex::Regex;
-    use std::{
-        io::Error,
-        path::PathBuf,
-    };
+    use std::io::Error;
+    use std::path::{Path, PathBuf};
 
     lazy_static! {
         // paths
-        pub static ref CNF_FILES: PathBuf = PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test");
+        pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files\test");
 
         // regex
         static ref PROD_FILE_NAME: Regex = Regex::new(r"Production_(\d{14}).ready").expect("failed to build regex");
@@ -41,22 +39,15 @@ pub mod paths {
 
     impl CnfFilePaths for PathBuf {
         fn new_prod_file() -> Self {
-            let mut path = CNF_FILES.clone();
-            path.push( chrono::Local::now().format("Production_%Y%m%d%H%M%S.ready").to_string() );
-
-            path
+            CNF_FILES.join( chrono::Local::now().format("Production_%Y%m%d%H%M%S.ready").to_string() )
         }
 
         fn new_issue_file() -> Self {
-            let mut path = CNF_FILES.clone();
-            path.push( chrono::Local::now().format("Issue_%Y%m%d%H%M%S.ready").to_string() );
-
-            path
+            CNF_FILES.join( chrono::Local::now().format("Issue_%Y%m%d%H%M%S.ready").to_string() )
         }
         
         fn archive_file(self: &Self) -> Self {
-            let mut path = CNF_FILES.clone();
-            path.push("archive");
+            let mut path = CNF_FILES.join( "archive" );
 
             // safe to unwrap Option<&OsStr> here
             //  because we will assume whoever consumes this api
@@ -67,8 +58,7 @@ pub mod paths {
         }
         
         fn backup_file(self: &Self) -> Self {
-            let mut path = CNF_FILES.clone();
-            path.push("backup");
+            let mut path = CNF_FILES.join( "archive" );
 
             // safe to unwrap Option<&OsStr> here
             //  because we will assume whoever consumes this api
@@ -79,7 +69,7 @@ pub mod paths {
         }
         
         fn issue_file(self: &Self) -> Self {
-            let mut path = CNF_FILES.clone();
+            let mut path = CNF_FILES.to_path_buf();
 
             // safe to unwrap Option<&OsStr> and Option<&str> here
             //  because we already checked that it is a file
