@@ -1,6 +1,7 @@
 
 use std::fmt::{self, Display, Formatter};
-use super::{bom_keys, Material};
+use super::Material;
+use crate::db::bom::bom_keys;
 
 #[derive(Debug, Default)]
 pub struct Part {

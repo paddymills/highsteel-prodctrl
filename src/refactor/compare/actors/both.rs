@@ -5,10 +5,11 @@ use super::{
     Actor, Message, JobShipResults, PartResults,
     db::{get_bom_pool, get_sndb_pool},
     super::{
-        api::{find_dxf_file, BomDbOps, SnDbOps, PartCompare},
+        api::{find_dxf_file, SnDbOps, PartCompare},
         PartMap
-    }
+    }, api::PartAndQty
 };
+use crate::db::bom::BomDbOps;
 
 #[derive(Debug)]
 pub struct BothActor {
@@ -31,7 +32,7 @@ impl Actor for BothActor {
                                 .expect("Failed to get Bom db client")
                             .parts_qty(&js).await
                             .into_iter()
-                            .for_each(|res| {
+                            .for_each(|res: PartAndQty| {
                                 let _ = parts.insert(res.mark, PartCompare { bom: res.qty, ..Default::default() });
                             });
                         

@@ -61,7 +61,7 @@ pub fn read_config() -> Figment {
         //         .filter(|k| k.starts_with("SNDB_"))
         //         .split("_")
         // )
-        .merge(Toml::file("config.toml"))
+        .merge(Toml::file(r"test\config.toml"))
 }
 
 #[cfg(test)]

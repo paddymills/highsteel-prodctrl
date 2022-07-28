@@ -2,7 +2,7 @@
 use tiberius::Row;
 use std::fmt::{self, Display, Formatter};
 
-use super::bom_keys;
+use crate::db::bom::bom_keys;
 
 const DEFAULT_ZONE: u8 = 2;
 const HPS_ZONE: u8 = 3;

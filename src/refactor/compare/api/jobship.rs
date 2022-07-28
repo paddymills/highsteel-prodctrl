@@ -25,13 +25,3 @@ impl Display for JobShip {
         write!(f, "{}-{}", self.job, self.ship)
     }
 }
-
-// pub struct JobShipMark {
-//     pub job: String,
-//     pub ship: String,
-//     pub mark: Mark
-// }
-
-// impl JobShipMark {
-//     pub fn from(js: JobShip, mark: Mark)
-// }

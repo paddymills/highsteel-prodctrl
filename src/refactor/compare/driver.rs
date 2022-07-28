@@ -2,9 +2,6 @@
 use simple_excel_writer::*;
 use pbr::MultiBar;
 
-// use log::Log;
-use simplelog::{LevelFilter, Config, WriteLogger};
-
 use crossbeam::channel;
 // use rayon::prelude::*;
 use tokio::sync::{mpsc, oneshot};
@@ -19,6 +16,7 @@ use super::{
     JobShipMap
 };
 use crate::Error;
+use crate::logging;
 
 pub struct BomWoDxfCompare {
     map: JobShipMap
@@ -34,12 +32,7 @@ enum Progress {
 
 impl BomWoDxfCompare {
     pub async fn new() -> Self {
-        WriteLogger::init(
-            LevelFilter::Debug,
-            Config::default(),
-            std::fs::File::create("bom_wo_dxf_compare.log").expect("failed to create log")
-            // std::io::stderr()
-        ).expect("Failed to init logger");
+        logging::init_logger("bom_wo_dxf_compare");
 
         Self { map: JobShipMap::new() }
     }

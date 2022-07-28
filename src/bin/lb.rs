@@ -2,9 +2,9 @@
 use simple_excel_writer::*;
 
 use prodctrl::{
-    App,
+    app::App,
     cli::JobShipCli,
-    part::Part
+    api::Part
 };
 
 #[tokio::main]

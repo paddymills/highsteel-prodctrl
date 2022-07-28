@@ -1,6 +1,6 @@
 
 use clap::Parser;
-use prodctrl::{App, Error};
+use prodctrl::{app::App, Error};
 use prodctrl::cli::{CliMenuApp, Menu};
 
 #[tokio::main]

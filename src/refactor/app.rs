@@ -4,7 +4,7 @@ use bb8_tiberius::ConnectionManager;
 use tiberius::Query;
 
 use crate::db::HssConfig;
-use crate::part::Part;
+use crate::api::Part;
 use crate::cli::CliMenuApp;
 
 const POOL_SIZE: u32 = 2;

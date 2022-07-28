@@ -1,7 +1,8 @@
 
 use std::fmt::{self, Display, Formatter};
 use tiberius::Row;
-use super::{bom_keys, Grade};
+use super::Grade;
+use crate::db::bom::bom_keys;
 
 #[derive(Debug, Default)]
 pub struct Material {

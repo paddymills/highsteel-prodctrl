@@ -3,7 +3,7 @@ use bb8_tiberius::IntoConfig;
 use tiberius::{AuthMethod, Config, error::Error};
 
 use figment::Figment;
-use super::config::{Database, read_config};
+use crate::config::{Database, read_config};
 
 lazy_static! {
     static ref CONFIG: Figment = read_config();
