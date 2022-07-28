@@ -1,6 +1,0 @@
-[bom]
-server = "HSSSQLSERV"
-
-[sigmanest]
-server = "hiiwinbl18"
-database = "SNDBase91"
