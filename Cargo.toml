@@ -17,10 +17,6 @@ db = [ "async", "dep:bb8", "dep:bb8-tiberius", "dep:tiberius" ]
 xl = []
 full = ["db", "xl"]
 
-[[bin]]
-name = "compare"
-required-features = ["db"]
-
 [dependencies]
 lazy_static = "1.4"
 serde = { version = "1.0", features = ["derive"] }
@@ -59,3 +55,18 @@ crossbeam = { version = "0.8", optional = true }
 
 [dev-dependencies]
 figment = { version = "0.10", features = ["env", "test", "toml"] }
+
+[[example]]
+name = "compare"
+required-features = ["db"]
+
+[[example]]
+name = "sap_cnf_files"
+
+[[example]]
+name = "bom"
+required-features = ["db"]
+
+[[example]]
+name = "lb"
+required-features = ["db"]
