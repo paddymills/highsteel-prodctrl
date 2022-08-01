@@ -15,6 +15,10 @@ pub struct Part {
 }
 
 impl Part {
+    pub fn new(mark: String) -> Self {
+        Self { mark, ..Default::default() }
+    }
+
     pub fn is_pl(&self) -> bool {
         self.matl.is_pl()
     }
