@@ -1,18 +1,15 @@
 
 use std::fmt::{Display, Formatter, Result};
-
-use super::{Mark, Qty};
-
-pub type JobShipMark = (JobShip, Mark, Qty);
+use tiberius::Row;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct JobShip {
+pub struct JobShipment {
     pub job: String,
     pub ship: String
 }
 
-impl From<&tiberius::Row> for JobShip {
-    fn from(row: &tiberius::Row) -> Self {
+impl From<&Row> for JobShipment {
+    fn from(row: &Row) -> Self {
         Self {
             job: row.get::<&str, _>("Data1").expect("Job is None").into(),
             ship: row.get::<&str, _>("Data2").expect("Shipment is None").into()
@@ -20,7 +17,7 @@ impl From<&tiberius::Row> for JobShip {
     }
 }
 
-impl Display for JobShip {
+impl Display for JobShipment {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}-{}", self.job, self.ship)
     }

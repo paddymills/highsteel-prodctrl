@@ -1,18 +1,19 @@
 
 use tokio::sync::oneshot;
 
+use crate::api::JobShipment;
 use super::{
-    api::{JobShip, Mark, PartCompare},
+    api::{Mark, PartCompare},
     super::PartMap
 };
 
 pub enum Message {
     GetJobShip {
-        js: JobShip,
+        js: JobShipment,
         respond_to: oneshot::Sender<JobShipResults>
     },
     GetPartData {
-        js: JobShip,
+        js: JobShipment,
         mark: Mark,
         compare: PartCompare,
         respond_to: oneshot::Sender<PartResults>
@@ -22,13 +23,13 @@ pub enum Message {
 
 #[derive(Debug)]
 pub struct JobShipResults {
-    pub js: JobShip,
+    pub js: JobShipment,
     pub parts: PartMap
 }
 
 #[derive(Debug)]
 pub struct PartResults {
-    pub js: JobShip,
+    pub js: JobShipment,
     pub mark: Mark,
     pub compare: PartCompare
 }

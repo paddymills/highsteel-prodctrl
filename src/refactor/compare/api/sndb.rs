@@ -2,7 +2,7 @@
 use bb8_tiberius::rt::Client;
 use tiberius::Row;
 
-use super::{JobShip, Mark};
+use super::{JobShipment, Mark};
 
 #[derive(Debug, Default)]
 pub struct QtyAndNested {
@@ -32,15 +32,15 @@ impl From<&Row> for QtyAndNested {
 
 #[async_trait]
 pub trait SnDbOps {
-    async fn get_jobs(&mut self) -> Vec<JobShip>;
-    async fn qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested;
-    async fn archive_qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested;
-    async fn imported(&mut self, js: &JobShip, mark: &Mark) -> bool;
+    async fn get_jobs(&mut self) -> Vec<JobShipment>;
+    async fn qty_and_nested(&mut self, js: &JobShipment, mark: &Mark) -> QtyAndNested;
+    async fn archive_qty_and_nested(&mut self, js: &JobShipment, mark: &Mark) -> QtyAndNested;
+    async fn imported(&mut self, js: &JobShipment, mark: &Mark) -> bool;
 }
 
 #[async_trait]
 impl SnDbOps for Client {
-    async fn get_jobs(&mut self) -> Vec<JobShip> {
+    async fn get_jobs(&mut self) -> Vec<JobShipment> {
         debug!("Getting jobs list");
 
         self
@@ -53,11 +53,11 @@ impl SnDbOps for Client {
             .await.expect("failed to query for jobs")
             .into_first_result().await.expect("failed to get jobs list from results")
             .into_iter()
-            .map(|row| JobShip::from(&row) )
+            .map(|row| JobShipment::from(&row) )
             .collect()
     }
 
-    async fn qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested {
+    async fn qty_and_nested(&mut self, js: &JobShipment, mark: &Mark) -> QtyAndNested {
         match async {
             self
                 .query(
@@ -80,7 +80,7 @@ impl SnDbOps for Client {
             }
     }
 
-    async fn archive_qty_and_nested(&mut self, js: &JobShip, mark: &Mark) -> QtyAndNested {
+    async fn archive_qty_and_nested(&mut self, js: &JobShipment, mark: &Mark) -> QtyAndNested {
         match async {
             self
                 .query(
@@ -103,7 +103,7 @@ impl SnDbOps for Client {
             }
     }
 
-    async fn imported(&mut self, js: &JobShip, mark: &Mark) -> bool {
+    async fn imported(&mut self, js: &JobShipment, mark: &Mark) -> bool {
         if let Ok(Some(_)) = async {
             self
                 .query(

@@ -1,13 +1,10 @@
 
-use tiberius::Row;
 use std::fmt::{self, Display, Formatter};
-
-use crate::db::bom::bom_keys;
 
 const DEFAULT_ZONE: u8 = 2;
 const HPS_ZONE: u8 = 3;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Grade {
     spec: String,
     grade: String,
@@ -15,22 +12,15 @@ pub struct Grade {
     zone: u8
 }
 
-impl From<&Row> for Grade {
-    fn from(row: &Row) -> Self {
-        Self::new(
-            row.get::<&str, _>(bom_keys::SPEC).unwrap_or_default(),
-            row.get::<&str, _>(bom_keys::GRADE).unwrap_or_default(),
-            row.get::<&str, _>(bom_keys::TEST).unwrap_or_default(),
-            DEFAULT_ZONE
-        )
-    }
-}
-
 impl Grade {
     pub fn new(_spec: &str, _grade: &str, _test: &str, mut zone: u8) -> Self {
         let mut spec  = String::from(_spec);
         let mut grade = String::from(_grade);
         let mut test  = _test.into();
+
+        if zone == 0 {
+            zone = DEFAULT_ZONE
+        }
 
         match _spec {
             "A240 Type 304" => {
@@ -62,6 +52,17 @@ impl Grade {
         match self.test {
             Test::None => format!("{}-{}{:}{}", self.spec, self.grade, Test::Charpy, self.zone),
             _          => format!("{:}", self)
+        }
+    }
+}
+
+impl Default for Grade {
+    fn default() -> Self {
+        Self {
+            spec: "A709".into(),
+            grade: "[unknown]".into(),
+            test: Test::None,
+            zone: DEFAULT_ZONE
         }
     }
 }

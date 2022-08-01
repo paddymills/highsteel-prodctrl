@@ -1,7 +1,7 @@
 
 use super::Mark;
 use crate::api::Part;
-use crate::db::bom::bom_keys;
+use crate::db::bom::keys;
 
 pub struct PartAndQty {
     pub mark: Mark,
@@ -20,8 +20,8 @@ impl From<Part> for PartAndQty {
 impl From<tiberius::Row> for PartAndQty {
     fn from(row: tiberius::Row) -> Self {
         Self {
-            mark: row.get::<&str, _>(bom_keys::MARK).unwrap_or_default().into(),
-            qty:  row.get::<i32, _>(bom_keys::QTY).unwrap_or_default() as u32
+            mark: row.get::<&str, _>(keys::MARK).unwrap_or_default().into(),
+            qty:  row.get::<i32, _>(keys::QTY).unwrap_or_default() as u32
         }
     }
 }

@@ -1,45 +1,12 @@
 
 use std::fmt::{self, Display, Formatter};
-use tiberius::Row;
 use super::Grade;
-use crate::db::bom::bom_keys;
 
 #[derive(Debug, Default)]
 pub struct Material {
     pub comm: Commodity,
     pub grade: Grade,
     pub len: f32
-}
-
-impl From<&Row> for Material {
-    fn from(row: &Row) -> Self {
-        let len = row.get::<f32, _>(bom_keys::LEN).unwrap_or_default();
-        let grade = Grade::from(row);
-
-        let comm = match row.get::<&str, _>(bom_keys::COMM).unwrap_or_default() {
-            "PL" => Commodity::Plate {
-                thk: row.get::<f32, _>(bom_keys::THK).unwrap_or_default(),
-                wid: row.get::<f32, _>(bom_keys::WID).unwrap_or_default()
-            },
-            
-            "L" | "HSS" => Commodity::Shape {
-                thk: row.get::<f32, _>(bom_keys::ANG_THK).unwrap_or_default(),
-                section: row.get::<&str, _>(bom_keys::DESC).unwrap_or_default().into()
-            },
-
-            "MC" | "C" | "W" | "WT" => Commodity::Shape {
-                // TODO: AISC shape db thickness
-                thk: row.get::<f32, _>(bom_keys::THK).unwrap_or_default(),
-                section: row.get::<&str, _>(bom_keys::DESC).unwrap_or_default().into()
-            },
-            
-            _ => Commodity::Skip(
-                row.get::<&str, _>(bom_keys::DESC).unwrap_or_default().into()
-            )
-        };
-
-        Self { comm, grade, len }
-    }
 }
 
 impl Material {

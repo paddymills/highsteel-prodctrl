@@ -3,7 +3,7 @@ use glob::glob;
 
 use super::*;
 
-pub fn find_dxf_file(js: &JobShip, mark: &String) -> bool {
+pub fn find_dxf_file(js: &JobShipment, mark: &String) -> bool {
     debug!("Finding dxf for {} > {}", js, mark);
 
     let globs: [String; 2] = [
