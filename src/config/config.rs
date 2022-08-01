@@ -1,32 +1,21 @@
 
-#[allow(unused_imports)]
 use figment::{
-    Error,
     Figment,
-    providers::{Env, Format, Serialized, Toml}
+    providers::{Format, Serialized, Toml}
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub bom: Database,
-
-    #[serde(alias = "sndb")]
     pub sigmanest: Database
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Database {
-    #[serde(alias = "host")]
     pub server: String,
-
-    #[serde(alias = "db")]
-    pub database: Option<String>, 
-
-    #[serde(alias = "uid")]
+    pub database: Option<String>,
     pub user: Option<String>,
-
-    #[serde(alias = "pwd")]
     pub password: Option<String>,
 }
 
@@ -43,24 +32,11 @@ impl Default for Config {
                 ..Default::default()
             }
         }
-
-        // Self {
-        //     bom: Database { server: "[ENG]".into(), ..Default::default() },
-        //     sigmanest: Database { server: "[SNDB]".into(), db: Some("[SNDB.db]".into()), ..Default::default() }
-        // }
     }
 }
 
 pub fn read_config() -> Figment {
-
     Figment::from(Serialized::defaults(Config::default()))
-        // cannot use env until figment fixes duplicate key error
-        // .merge(
-        //     // Env::prefixed strips the prefix, which we need
-        //     Env::raw()
-        //         .filter(|k| k.starts_with("SNDB_"))
-        //         .split("_")
-        // )
         .merge(Toml::file(r"test\config.toml"))
 }
 
