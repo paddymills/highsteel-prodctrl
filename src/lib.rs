@@ -13,8 +13,9 @@
 //! - `full`: Enables all features
 //! - `api`: Enables the internal business logic api
 //! - `async`: Enables the [tokio] runtime and async dependencies
-//! - `db`: Enables the mssql integration
-//! - `xl`: Enables the excel data contectors
+//! - `db`: Enables database (mssql) integration
+//! - `fs`: Enables filesystem module
+//! - `xl`: Enables excel data contectors
 //! 
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/features.html#the-features-section
 //! [tokio]: https://tokio.rs
@@ -38,6 +39,9 @@ pub mod api;
 
 #[cfg(feature="db")]
 pub mod db;
+
+#[cfg(feature = "fs")]
+pub mod fs;
 
 pub type Error = Box<dyn std::error::Error>;
 pub type Result<T> = std::result::Result<T, Error>;

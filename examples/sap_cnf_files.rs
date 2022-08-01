@@ -1,5 +1,5 @@
 
-use prodctrl::cnf::ProdFileProcessor;
+use prodctrl::fs::cnf::ProdFileProcessor;
 
 #[tokio::main]
 async fn main() -> Result<(), prodctrl::Error> {

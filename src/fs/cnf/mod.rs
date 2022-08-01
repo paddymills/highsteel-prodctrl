@@ -12,6 +12,7 @@ pub mod paths {
 
     lazy_static! {
         // paths
+        // TODO: refactor into paths module
         pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files\test");
 
         // regex
