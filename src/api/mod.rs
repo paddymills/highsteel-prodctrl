@@ -1,4 +1,11 @@
 
-mod part;
+//! Core HSS/PC api
 
-pub use part::Part;
+mod grade;
+pub use grade::Grade;
+
+mod jobship;
+pub use jobship::JobShipment;
+
+mod part;
+pub use part::{Commodity, Material, Part};

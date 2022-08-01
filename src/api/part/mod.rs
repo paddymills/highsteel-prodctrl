@@ -1,8 +1,8 @@
 
-mod grade;
-mod part;
-mod material;
+pub use super::Grade;
 
-pub use grade::Grade;
+mod material;
+pub use material::{Commodity, Material};
+
+mod part;
 pub use part::Part;
-pub use material::Material;
