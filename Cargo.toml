@@ -15,8 +15,9 @@ api = []
 async = [ "async_once", "async-trait", "tokio", "tokio-util" ]
 db = [ "async", "bb8", "bb8-tiberius", "tiberius" ]
 fs = []
+gui = []
 xl = []
-full = [ "api", "db", "fs", "xl" ]
+full = [ "api", "db", "fs", "gui", "xl" ]
 
 [dependencies]
 lazy_static = "1.4"

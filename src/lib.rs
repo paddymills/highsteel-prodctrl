@@ -15,6 +15,7 @@
 //! - `async`: Enables the [tokio] runtime and async dependencies
 //! - `db`: Enables database (mssql) integration
 //! - `fs`: Enables filesystem module
+//! - `gui`: Enables graphical interfaces
 //! - `xl`: Enables excel data contectors
 //! 
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/features.html#the-features-section
