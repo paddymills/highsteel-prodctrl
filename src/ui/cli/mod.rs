@@ -19,3 +19,8 @@ where
 pub trait Menu {
     fn menu() -> Self;
 }
+
+pub fn error(msg: &str) {
+    eprintln!("{}", msg);
+}
+

@@ -3,7 +3,7 @@ use simple_excel_writer::*;
 
 use prodctrl::{
     app::App,
-    cli::JobShipCli,
+    ui::cli::JobShipCli,
     api::Part
 };
 

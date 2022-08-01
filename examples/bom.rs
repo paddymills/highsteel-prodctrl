@@ -1,7 +1,7 @@
 
 use clap::Parser;
 use prodctrl::{app::App, Error};
-use prodctrl::cli::{CliMenuApp, Menu};
+use prodctrl::ui::cli::{CliMenuApp, Menu};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

@@ -5,7 +5,7 @@ use tiberius::Query;
 
 use crate::db::HssConfig;
 use crate::api::Part;
-use crate::cli::CliMenuApp;
+use crate::ui::cli::CliMenuApp;
 
 const POOL_SIZE: u32 = 2;
 
