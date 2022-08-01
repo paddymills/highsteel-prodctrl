@@ -12,10 +12,10 @@ repository = "https://github.com/paddymills/highsteel-prodctrl"
 [features]
 default = ["api"]
 api = []
-async = [ "dep:async_once", "dep:async-trait", "dep:tokio", "dep:tokio-util" ]
-db = [ "async", "dep:bb8", "dep:bb8-tiberius", "dep:tiberius" ]
+async = [ "async_once", "async-trait", "tokio", "tokio-util" ]
+db = [ "async", "bb8", "bb8-tiberius", "tiberius" ]
 xl = []
-full = ["db", "xl"]
+full = [ "api", "db", "xl" ]
 
 [dependencies]
 lazy_static = "1.4"
