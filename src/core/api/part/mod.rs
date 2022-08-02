@@ -1,8 +1,11 @@
 
 pub use super::Grade;
 
+mod comm;
+pub use comm::Commodity;
+
 mod material;
-pub use material::{Commodity, Material};
+pub use material::Material;
 
 mod part;
 pub use part::Part;
