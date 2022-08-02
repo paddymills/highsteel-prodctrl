@@ -72,12 +72,12 @@ impl ProdFileProcessor {
         Ok(())
     }
 
+    /// Modifications:
+    /// - Plant 3 material to RAW
+    /// - Skip items for material not in SAP
+    /// - Non-production pieces to scrap
+    /// - SAP part name if different from SN
     pub fn process_file(&self, filepath: &PathBuf) -> Result<(), Error> {
-        // Modifications:
-        //   :: Plant 3 material to RAW
-        //   :: Skip items for material not in SAP
-        //   :: Non-production pieces to scrap
-        //   :: SAP part name if different from SN
 
         let mut reader = self.reader.from_path(filepath)?;
         reader.set_headers( StringRecord::from(HEADERS.to_vec()) );
@@ -91,6 +91,7 @@ impl ProdFileProcessor {
             let mut issue_writer = self.writer.from_path( filepath.issue_file().as_path() )?;
 
             for result in results {
+                // TODO: log errors
                 let mut record = result.expect("Failed to deserialize row");
 
                 // filter out items based on material location
@@ -98,6 +99,7 @@ impl ProdFileProcessor {
                     continue;
                 }
     
+                // consume all HS02 material from RAW
                 if record.plant == Plant::Williamsport {
                     record.matl_loc = Some("RAW".into());
                 }

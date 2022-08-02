@@ -1,4 +1,4 @@
 
-//! filesystem integration
+//! filesystem modules
 
 pub mod cnf;

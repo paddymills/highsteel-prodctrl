@@ -1,6 +1,12 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Confirmation file row
+/// 
+/// tab delimited row in the format
+/// ```tsv
+/// {mark}	S-{job}	{part wbs}	{part location: PROD}	{part qty}	{part UoM: EA}	{material master}	{material wbs}	{material qty}	{material UoM: IN2}	{material location}	{plant}	{program}	
+/// ```
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all="PascalCase")]
 pub struct CnfFileRow {
@@ -21,6 +27,32 @@ pub struct CnfFileRow {
     pub program:  String
 }
 
+/// Issue file row
+/// 
+/// ### Text format
+/// tab delimited row in the format:
+/// ```tsv
+/// {code}	{user1}	{user2}	{material master}	{material wbs}	{material qty}	{material UoM: IN2}	{material location}	{plant}	{program}	
+/// ```
+/// 
+/// ### Transaction Codes
+/// 
+/// | code | SAP transactions | description |
+/// |---|---|---|
+/// | PR01 | MIGO 221Q | Comsumption for project from project |
+/// | PR02 | MIGO 221 | Consumption for project from warehouse |
+/// | PR03 | MIGO 311Q + MIGO 221Q | Transfer from project to project And consumption from latter project |
+/// | CC01 | MIGO 201 | Consumption for cost center from warehouse |
+/// | CC02 | MIGO [transfer from WBS] & 201 | Consumption for cost center from project |
+/// 
+/// ### User1 and User2 Columns
+/// 
+/// | code | user1 | user2 |
+/// |---|---|---|
+/// | PR* | `D-{job}` | Shipment |
+/// | CC* | Cost Center | G/L Account[^note] |
+/// 
+/// [^note]: G/L Account should always be `637118`, unless for a machine project (i.e. CNC table parts)
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all="PascalCase")]
 pub struct IssueFileRow {
@@ -46,6 +78,8 @@ pub enum Plant {
     Williamsport
 }
 
+
+/// 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub enum IssueCode {
     #[serde(rename = "PR01")]
