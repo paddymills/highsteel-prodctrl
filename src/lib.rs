@@ -1,5 +1,5 @@
 
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 //! what run production control
 //! 
@@ -26,6 +26,7 @@
 
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
+#[macro_use] extern crate serde;
 
 mod core;
 pub use crate::core::*; // must use crate::core to resolve ambiguity
@@ -37,5 +38,9 @@ pub mod config;
 pub mod fs;
 pub mod ui;
 
+/// Dynamic error type for convenience
 pub type Error = Box<dyn std::error::Error>;
+/// Dynamic result type for convenience using [`crate::Error`]
+/// 
+/// [`crate::Error`]: crate::Error
 pub type Result<T> = std::result::Result<T, Error>;

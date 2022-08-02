@@ -4,8 +4,12 @@
 mod config;
 pub use config::*;
 
+mod db;
+pub use db::Database;
 
-use figment::Figment;
 lazy_static! {
-    pub static ref CONFIG: Figment = config::read_config();
+    /// lazy evaluated global [`Config`]
+    /// 
+    /// [`Config`]: crate::config::Config
+    pub static ref CONFIG: Config = Config::read_config();
 }

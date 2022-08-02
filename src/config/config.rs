@@ -3,42 +3,38 @@ use figment::{
     Figment,
     providers::{Format, Serialized, Toml}
 };
-use serde::{Deserialize, Serialize};
 
+use super::Database;
+
+/// Parent config node
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
+    /// Bom database configuration
     pub bom: Database,
-    pub sigmanest: Database
-}
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Database {
-    pub server: String,
-    pub database: Option<String>,
-    pub user: Option<String>,
-    pub password: Option<String>,
+    /// Sigmanest database configuration
+    pub sigmanest: Database
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            bom: Database {
-                server: "HSSSQLSERV".into(),
-                ..Default::default()
-            },
-            sigmanest: Database {
-                server: "hiiwinbl18".into(),
-                database: Some("SNDBase91".into()),
-                ..Default::default()
-            }
+            bom: Database::new("HSSSQLSERV", None),
+            sigmanest: Database::new("hiiwinbl18", Some("SNDBase91"))
         }
     }
 }
 
-pub fn read_config() -> Figment {
-    Figment::from(Serialized::defaults(Config::default()))
-        .merge(Toml::file(r"test\config.toml"))
+impl Config {
+    /// init config
+    pub fn read_config() -> Self {
+        Figment::from(Serialized::defaults(Config::default()))
+            .merge(Toml::file(r"test\config.toml"))
+            .extract()
+            .expect("Failed to extract config")
+    }
 }
+
 
 #[cfg(test)]
 mod config_tests {
@@ -61,12 +57,10 @@ mod config_tests {
                 database = "SNDBase91"
             "#)?;
     
-            let config = read_config();
+            let config = Config::read_config();
             println!("{:#?}", config);
-
-            println!("{:#?}", config.extract::<Config>());
     
-            assert_eq!(config.extract_inner::<Database>("bom")?.server, "HSSSQLSERV".to_string());
+            assert_eq!(config.bom.server_name(), "HSSSQLSERV".to_string());
             // assert_eq!(config.extract_inner::<Database>("sigmanest")?.user, Some("SNUser".to_string()));
 
             Ok(())
