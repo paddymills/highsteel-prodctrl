@@ -1,46 +1,49 @@
+# For documentation on this fine, see https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [package]
 name = "prodctrl"
 version = "0.1.0"
-authors = ["Patrick Miller"]
+authors = [ "Patrick Miller" ]
 edition = "2021"
-description = "what runs production control"
+description = "Production control automation"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/paddymills/highsteel-prodctrl"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+default-run = "cli"
 
 [features]
 default = []
 full = [ "db", "gui", "xl" ]
 db = [ "async", "mssql" ]
 gui = []
-xl = []
+xl = [ "simple_excel_writer" ]
 
 async = [ "async_once", "async-trait", "tokio", "tokio-util" ]
 mssql = [ "bb8", "bb8-tiberius", "tiberius" ]
 
 [dependencies]
+chrono = "0.4"
+csv = "1.1"
+figment = { version = "0.10", features = ["env", "toml"] }
+glob = "0.3"
 lazy_static = "1.4"
+rayon = "1.5"
+regex = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 
 # logging
 log = "0.4"
 simplelog = "0.12"
 
-# needs split into features
-chrono = "0.4"
-csv = "1.1"
-figment = { version = "0.10", features = ["env", "toml"] }
-glob = "0.3"
-uncased = "0.9"
-rayon = "1.5"
-regex = "1.5"
-simple_excel_writer = "0.2.0"
+# cli/tui
+# TODO: simplify progress (linya, nutmeg, pbr)
 clap = { version = "3.2", features = ["derive"] }
 linya = "0.3"
 nutmeg = "0.1"
 pbr = "1.0"
 requestty = "0.4"
+
+# Excel
+simple_excel_writer = { version = "0.2.0", optional = true }
 
 # MSSQL database
 bb8 = { version = "0.8", optional = true }
@@ -58,12 +61,13 @@ crossbeam = { version = "0.8", optional = true }
 [dev-dependencies]
 figment = { version = "0.10", features = ["env", "test", "toml"] }
 
+[[bin]]
+name = "sap_confirmation_files"
+required-features = [ "db" ]
+
 [[example]]
 name = "compare"
 required-features = ["db"]
-
-[[example]]
-name = "sap_cnf_files"
 
 [[example]]
 name = "bom"
