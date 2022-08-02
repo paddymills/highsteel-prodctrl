@@ -1,5 +1,8 @@
 
-use prodctrl::{compare::BomWoDxfCompare, Error};
+mod compare;
+
+use compare::BomWoDxfCompare;
+use prodctrl::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
