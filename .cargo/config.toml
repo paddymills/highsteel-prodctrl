@@ -1,3 +1,5 @@
+[alias]
+docs = "doc --all-features --no-deps"
 
 [build]
 rustflags = ["--cfg", "tokio_unstable"]
