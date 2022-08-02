@@ -1,4 +1,6 @@
 
+//! logging frameworks
+
 use simplelog::{LevelFilter, Config, WriteLogger};
 
 use std::fs::File;

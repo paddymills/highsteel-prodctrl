@@ -30,13 +30,12 @@
 mod core;
 pub use crate::core::*; // must use crate::core to resolve ambiguity
 
-pub mod config;
-pub mod ui;
-
 #[cfg(feature="db")]
 pub mod db;
 
+pub mod config;
 pub mod fs;
+pub mod ui;
 
 pub type Error = Box<dyn std::error::Error>;
 pub type Result<T> = std::result::Result<T, Error>;
