@@ -4,6 +4,9 @@ use tiberius::Row;
 
 use super::{JobShipment, Mark};
 
+use async_trait::async_trait;
+use log::{debug, error};
+
 #[derive(Debug, Default)]
 pub struct QtyAndNested {
     pub qty: u32,

@@ -2,6 +2,7 @@
 use glob::glob;
 
 use super::*;
+use log::debug;
 
 pub fn find_dxf_file(js: &JobShipment, mark: &String) -> bool {
     debug!("Finding dxf for {} > {}", js, mark);

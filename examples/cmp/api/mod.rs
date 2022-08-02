@@ -1,10 +1,10 @@
 
-use crate::api::JobShipment;
+use prodctrl::api::JobShipment;
 
 // TODO: move this
 pub type Mark = String;
-pub type Qty = u32;
-pub type JobShipMark = (JobShipment, Mark, Qty);
+// pub type Qty = u32;
+// pub type JobShipMark = (JobShipment, Mark, Qty);
 
 mod bom;
 mod dxf;

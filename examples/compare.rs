@@ -1,7 +1,7 @@
 
-mod compare;
+mod cmp;
 
-use compare::BomWoDxfCompare;
+use cmp::BomWoDxfCompare;
 use prodctrl::Error;
 
 #[tokio::main]

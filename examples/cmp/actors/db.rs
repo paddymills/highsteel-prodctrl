@@ -2,6 +2,8 @@
 use async_once::AsyncOnce;
 use bb8::Pool;
 use bb8_tiberius::ConnectionManager;
+use lazy_static::lazy_static;
+use log::debug;
 
 const BOM_POOL_SIZE: u32 = 8;
 const SNDB_POOL_SIZE: u32 = 32;
@@ -12,7 +14,7 @@ lazy_static!(
         debug!("** init Bom db pool  *******************");
         debug!("****************************************");
 
-        let mgr = match ConnectionManager::build(crate::db::HssConfig::Bom) {
+        let mgr = match ConnectionManager::build(prodctrl::db::HssConfig::Bom) {
             Ok(conn_mgr) => conn_mgr,
             Err(_) => panic!("ConnectionManager failed to connect to database")
         };
@@ -39,7 +41,7 @@ lazy_static!(
         debug!("** init Sndb db pool  ******************");
         debug!("****************************************");
 
-        let mgr = match ConnectionManager::build(crate::db::HssConfig::Sigmanest) {
+        let mgr = match ConnectionManager::build(prodctrl::db::HssConfig::Sigmanest) {
             Ok(conn_mgr) => conn_mgr,
             Err(_) => panic!("ConnectionManager failed to connect to database")
         };

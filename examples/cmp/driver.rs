@@ -1,6 +1,7 @@
 
 use simple_excel_writer::*;
 use pbr::MultiBar;
+use log::{debug, error};
 
 use crossbeam::channel;
 // use rayon::prelude::*;
@@ -15,8 +16,7 @@ use super::{
     api::SnDbOps,
     JobShipMap
 };
-use crate::Error;
-use crate::logging;
+use prodctrl::{Error, logging};
 
 pub struct BomWoDxfCompare {
     map: JobShipMap

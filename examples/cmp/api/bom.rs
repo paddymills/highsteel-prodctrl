@@ -1,7 +1,7 @@
 
 use super::Mark;
-use crate::api::Part;
-use crate::db::bom::keys;
+use prodctrl::api::Part;
+use prodctrl::db::bom::keys;
 
 pub struct PartAndQty {
     pub mark: Mark,

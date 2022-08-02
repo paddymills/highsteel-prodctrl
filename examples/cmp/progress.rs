@@ -10,6 +10,7 @@ pub struct ProgressBars {
 }
 
 impl ProgressBars {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         let mb = MultiBar::new();
         let mut jobs = mb.create_bar(0);
@@ -29,6 +30,7 @@ impl ProgressBars {
         Self { jobs, bom, sndb, dxf_sn, dxf_fs }
     }
 
+    #[allow(dead_code)]
     pub fn inc_job(&mut self) {
         self.jobs.total += 1;
 
