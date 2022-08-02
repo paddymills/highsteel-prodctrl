@@ -2,7 +2,7 @@
 use bb8_tiberius::IntoConfig;
 use tiberius::{AuthMethod, Config, error::Error};
 
-use crate::config::{Database, CONFIG};
+use crate::config::CONFIG;
 
 
 // TODO: move config to each database module
@@ -13,7 +13,9 @@ use crate::config::{Database, CONFIG};
 /// - deserialization from config
 /// - conversion into database config
 pub enum HssConfig {
+    /// Bom database
     Bom,
+    /// Sigmanest database
     Sigmanest
 }
 
@@ -27,15 +29,11 @@ impl IntoConfig for HssConfig {
 
         match self {
             HssConfig::Bom => {
-                let db_cfg = CONFIG.extract_inner::<Database>("bom").unwrap();
-
-                config.host(&db_cfg.server);
+                config.host(&CONFIG.bom.server_name());
             },
             HssConfig::Sigmanest => {
-                let db_cfg = CONFIG.extract_inner::<Database>("sigmanest").unwrap();
-
-                config.host(&db_cfg.server);
-                config.database(&db_cfg.database.as_ref().unwrap());
+                config.host(&CONFIG.sigmanest.server_name());
+                config.database(&CONFIG.sigmanest.database.as_ref().unwrap());
             }
         }
 
