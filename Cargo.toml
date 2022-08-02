@@ -10,9 +10,8 @@ repository = "https://github.com/paddymills/highsteel-prodctrl"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["api"]
-full = [ "api", "db", "gui", "xl" ]
-api = []
+default = []
+full = [ "db", "gui", "xl" ]
 db = [ "async", "mssql" ]
 gui = []
 xl = []

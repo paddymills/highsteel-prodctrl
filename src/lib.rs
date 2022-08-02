@@ -9,10 +9,9 @@
 //! 
 //! Since certain non-core features require a large number of external libraries
 //! there are [feature flags] for some modules to reduce code compilation
-//! where the features are not needed. By default, only the api is enabled.
+//! where the features are not needed. No features are enabled by default.
 //! 
 //! - `full`: Enables all features
-//! - `api`: Enables the internal business logic api
 //! - `db`: Enables database integration (along with async and mssql dependencies)
 //! - `gui`: Enables graphical interfaces
 //! - `xl`: Enables excel data contectors
@@ -33,9 +32,6 @@ pub use crate::core::*; // must use crate::core to resolve ambiguity
 
 pub mod config;
 pub mod ui;
-
-#[cfg(feature = "api")]
-pub mod api;
 
 #[cfg(feature="db")]
 pub mod db;
