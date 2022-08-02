@@ -1,6 +1,6 @@
 
 use super::Mark;
-use prodctrl::api::Part;
+use prodctrl::Part;
 use prodctrl::db::bom::keys;
 
 pub struct PartAndQty {

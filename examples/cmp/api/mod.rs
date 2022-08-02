@@ -1,5 +1,5 @@
 
-use prodctrl::api::JobShipment;
+use prodctrl::JobShipment;
 
 // TODO: move this
 pub type Mark = String;

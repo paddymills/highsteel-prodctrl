@@ -3,7 +3,7 @@ use simple_excel_writer::*;
 
 use prodctrl::{
     ui::cli::{App, JobShipCli},
-    api::Part
+    Part
 };
 
 #[tokio::main]

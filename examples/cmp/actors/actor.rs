@@ -1,7 +1,7 @@
 
 use tokio::sync::oneshot;
 
-use prodctrl::api::JobShipment;
+use prodctrl::JobShipment;
 use super::{
     api::{Mark, PartCompare},
     super::PartMap

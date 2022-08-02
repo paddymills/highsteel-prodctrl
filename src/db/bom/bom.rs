@@ -4,8 +4,8 @@ use bb8_tiberius::ConnectionManager;
 use bb8_tiberius::rt::Client;
 use tiberius::Row;
 
-use crate::api::{Commodity, Grade, Material, Part};
-use crate::api::JobShipment;
+use crate::{Commodity, Grade, Material, Part};
+use crate::JobShipment;
 use super::keys;
 
 pub async fn init_bom(pool: Pool<ConnectionManager>, job: &str, shipment: i32) -> Result<Vec<Part>, crate::Error> {
