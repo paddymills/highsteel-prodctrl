@@ -1,7 +1,9 @@
 
+
 use std::fmt::{self, Display, Formatter};
 use super::Grade;
 
+/// Material representation for geometry
 #[derive(Debug, Default)]
 pub struct Material {
     pub comm: Commodity,
@@ -50,6 +52,7 @@ impl Display for Material {
     }
 }
 
+/// material type (plate, shape, etc.)
 #[derive(Debug)]
 pub enum Commodity {
     Plate { thk: f32, wid: f32 },

@@ -1,7 +1,9 @@
 
+
 use std::fmt::{self, Display, Formatter};
 use super::Material;
 
+/// Part (piecemark)
 #[derive(Debug, Default)]
 pub struct Part {
     pub mark: String,

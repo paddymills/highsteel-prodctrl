@@ -4,6 +4,7 @@ use std::fmt::{self, Display, Formatter};
 const DEFAULT_ZONE: u8 = 2;
 const HPS_ZONE: u8 = 3;
 
+/// Material grade
 #[derive(Debug)]
 pub struct Grade {
     spec: String,
