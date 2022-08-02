@@ -2,12 +2,8 @@
 use bb8_tiberius::IntoConfig;
 use tiberius::{AuthMethod, Config, error::Error};
 
-use figment::Figment;
-use crate::config::{Database, read_config};
+use crate::config::{Database, CONFIG};
 
-lazy_static! {
-    static ref CONFIG: Figment = read_config();
-}
 
 // TODO: move config to each database module
 
