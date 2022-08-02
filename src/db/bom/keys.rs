@@ -1,18 +1,21 @@
-// possible columns (as of 3-Jun-2022):
-//     Piecemark      <BigVarChar>
-//     Qty            <Intn>
-//     Commodity      <BigVarChar>
-//     Description    <BigVarChar>
-//     Thick          <Floatn>
-//     Width          <Floatn>
-//     Length         <Floatn>
-//     Specification  <BigVarChar>
-//     Grade          <BigVarChar>
-//     ImpactTest     <BigVarChar>
-//     Remark         <BigVarChar>
-//     Item           <BigVarChar>
-//     DwgNo          <BigVarChar>
-//     AngleThickness <Floatn>          (thickness of L and HSS shapes only)
+
+//! Bom database column keys
+
+/// possible columns (as of 3-Jun-2022):
+///     Piecemark      <BigVarChar>
+///     Qty            <Intn>
+///     Commodity      <BigVarChar>
+///     Description    <BigVarChar>
+///     Thick          <Floatn>
+///     Width          <Floatn>
+///     Length         <Floatn>
+///     Specification  <BigVarChar>
+///     Grade          <BigVarChar>
+///     ImpactTest     <BigVarChar>
+///     Remark         <BigVarChar>
+///     Item           <BigVarChar>
+///     DwgNo          <BigVarChar>
+///     AngleThickness <Floatn>          (thickness of L and HSS shapes only)
 
 pub const MARK:    &str = "Piecemark";
 pub const QTY:     &str = "Qty";

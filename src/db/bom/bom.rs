@@ -8,6 +8,10 @@ use crate::{Commodity, Grade, Material, Part};
 use crate::JobShipment;
 use super::keys;
 
+/// Builds a list of [`Parts`] from the database for a given [`JobShipment`]
+/// 
+/// [`Parts`]: crate::Part
+/// [`JobShipment`]: crate::JobShipment
 pub async fn init_bom(pool: Pool<ConnectionManager>, job: &str, shipment: i32) -> Result<Vec<Part>, crate::Error> {
     let res = pool.get()
         .await?

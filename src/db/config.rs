@@ -9,6 +9,13 @@ lazy_static! {
     static ref CONFIG: Figment = read_config();
 }
 
+// TODO: move config to each database module
+
+/// Hss database configurations
+/// 
+/// allows for easy
+/// - deserialization from config
+/// - conversion into database config
 pub enum HssConfig {
     Bom,
     Sigmanest
