@@ -13,8 +13,7 @@
 //! - `full`: Enables all features
 //! - `api`: Enables the internal business logic api
 //! - `async`: Enables the [tokio] runtime and async dependencies
-//! - `db`: Enables database (mssql) integration
-//! - `fs`: Enables filesystem module
+//! - `db`: Enables database integration (along with async and mssql dependencies)
 //! - `gui`: Enables graphical interfaces
 //! - `xl`: Enables excel data contectors
 //! 
@@ -41,7 +40,6 @@ pub mod api;
 #[cfg(feature="db")]
 pub mod db;
 
-#[cfg(feature = "fs")]
 pub mod fs;
 
 pub type Error = Box<dyn std::error::Error>;

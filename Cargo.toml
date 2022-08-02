@@ -11,13 +11,14 @@ repository = "https://github.com/paddymills/highsteel-prodctrl"
 
 [features]
 default = ["api"]
+full = [ "api", "db", "fs", "gui", "xl" ]
 api = []
-async = [ "async_once", "async-trait", "tokio", "tokio-util" ]
-db = [ "async", "bb8", "bb8-tiberius", "tiberius" ]
-fs = []
+db = [ "_async", "_mssql" ]
 gui = []
 xl = []
-full = [ "api", "db", "fs", "gui", "xl" ]
+
+_async = [ "async_once", "async-trait", "tokio", "tokio-util" ]
+_mssql = [ "bb8", "bb8-tiberius", "tiberius" ]
 
 [dependencies]
 lazy_static = "1.4"
