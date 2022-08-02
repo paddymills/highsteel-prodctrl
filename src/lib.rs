@@ -7,12 +7,12 @@
 //! 
 //! ## Feature Flags
 //! 
-//! There are [feature flags] for some modules to reduce code compilation
+//! Since certain non-core features require a large number of external libraries
+//! there are [feature flags] for some modules to reduce code compilation
 //! where the features are not needed. By default, only the api is enabled.
 //! 
 //! - `full`: Enables all features
 //! - `api`: Enables the internal business logic api
-//! - `async`: Enables the [tokio] runtime and async dependencies
 //! - `db`: Enables database integration (along with async and mssql dependencies)
 //! - `gui`: Enables graphical interfaces
 //! - `xl`: Enables excel data contectors
