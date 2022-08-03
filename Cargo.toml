@@ -75,9 +75,5 @@ name = "compare"
 required-features = ["db"]
 
 [[example]]
-name = "bom"
-required-features = ["db"]
-
-[[example]]
 name = "lb"
 required-features = ["db"]
