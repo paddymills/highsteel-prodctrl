@@ -2,8 +2,8 @@
 use prodctrl::prelude::*;
 
 use clap::{Parser, Subcommand};
-use prodctrl::JobShipment;
-use prodctrl::db::bom;
+use prodctrl::{JobShipment, Part};
+use prodctrl::db::bom::{self, BomDbOps};
 
 // TODO: completions https://docs.rs/clap_complete/latest/clap_complete/index.html
 #[derive(Debug, Parser)]
@@ -54,14 +54,13 @@ async fn main() -> Result<()> {
     if let Some(cmd) = &args.command {
         match cmd {
             Bom { job_ship, .. } => {
-                let pool = bom::build_pool().await;
-                let parts = bom::init_bom( pool, &job_ship.job, job_ship.ship.parse()? )
-                    .await?
-                    .into_iter();
-    
                 // TODO: filters
-    
-                parts.for_each( |part| println!("{:#?}", part) );
+                bom::connect()
+                    .await
+                    .init_bom( &job_ship.job, job_ship.ship.parse()? )
+                    .await?
+                    .into_iter()
+                    .for_each( |part: Part| println!("{:#?}", part) );
             },
             Lb { .. } => {
                 // TODO: implement this from examples

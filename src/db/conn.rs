@@ -3,10 +3,12 @@ use bb8::Pool;
 use bb8_tiberius::{ConnectionManager, IntoConfig};
 use tiberius::Client;
 use tokio::net::TcpStream;
-use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
+use tokio_util::compat::TokioAsyncWriteCompatExt;
+
+pub use super::prelude::*;
 
 /// Builds a connection pool for a database
-pub async fn build_db_pool(name: String, config: impl IntoConfig, size: u32) -> Pool<ConnectionManager> {
+pub async fn build_db_pool(name: String, config: impl IntoConfig, size: u32) -> DbPool {
     // TODO: dynamic debug padding for name
     debug!("****************************************");
     debug!("** init db pool for {} *******************", name);
@@ -33,7 +35,7 @@ pub async fn build_db_pool(name: String, config: impl IntoConfig, size: u32) -> 
 }
 
 /// Builds a single database connection
-pub async fn build_db_conn(name: String, config: impl IntoConfig) -> Client<Compat<TcpStream>> {
+pub async fn build_db_conn(name: String, config: impl IntoConfig) -> DbClient {
     debug!("** > building {} db connection", name);
 
     let cfg = config.into_config().expect("Failed to convert config");

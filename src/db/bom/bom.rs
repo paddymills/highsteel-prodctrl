@@ -1,46 +1,46 @@
 
-use bb8::Pool;
-use bb8_tiberius::ConnectionManager;
-use bb8_tiberius::rt::Client;
 use tiberius::Row;
 
 use crate::{Commodity, Grade, Material, Part};
 use crate::JobShipment;
-use super::keys;
 
-/// Builds a list of [`Parts`] from the database for a given [`JobShipment`]
-/// 
-/// [`Parts`]: crate::Part
-/// [`JobShipment`]: crate::JobShipment
-pub async fn init_bom(pool: Pool<ConnectionManager>, job: &str, shipment: i32) -> Result<Vec<Part>, crate::Error> {
-    let res = pool.get()
-        .await?
-        .query(
-            "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
-            &[&job, &shipment]
-        )
-        .await?
-        .into_results()
-        .await?
-        .into_iter()
-        .flatten()
-        .map( |row| Part::from(row) )
-        .collect();
+use super::{keys, super::prelude::*};
 
-    Ok(res)
-}
 
 /// Trait to add Bom db operations to database Client
 #[async_trait]
 pub trait BomDbOps<T> {
+    /// Builds a list of [`Parts`] from the database for a given [`JobShipment`]
+    /// 
+    /// [`Parts`]: crate::Part
+    /// [`JobShipment`]: crate::JobShipment
+    // TODO: refactor job and shipment to a JobShipment
+    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, crate::Error>;
+
     /// Gets all parts and their quantities or a given [`JobShipment`]
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T>;
 }
 
 #[async_trait]
-impl<T> BomDbOps<T> for Client
+impl<T> BomDbOps<T> for DbClient
     where T: From<Row>
 {
+    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, crate::Error> {
+        let res = self
+            .query(
+                "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
+                &[&job, &shipment]
+            )
+            .await?
+            .into_first_result()
+            .await?
+            .into_iter()
+            .map( |row| T::from(row) )
+            .collect();
+    
+        Ok(res)
+    }
+
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T> {
         debug!("** > Db called parts_qty *********************");
         self
