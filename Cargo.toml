@@ -8,7 +8,7 @@ edition = "2021"
 description = "Production control automation"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/paddymills/highsteel-prodctrl"
-default-run = "cli"
+default-run = "pc"
 
 [features]
 default = []
@@ -63,6 +63,11 @@ figment = { version = "0.10", features = ["env", "test", "toml"] }
 
 [[bin]]
 name = "sap_confirmation_files"
+required-features = [ "db" ]
+
+[[bin]]
+name = "pc"
+path = "src\\bin\\cli.rs"
 required-features = [ "db" ]
 
 [[example]]
