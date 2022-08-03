@@ -37,6 +37,7 @@ simplelog = "0.12"
 # cli/tui
 # TODO: simplify progress (linya, nutmeg, pbr)
 clap = { version = "3.2", features = ["derive"] }
+clap-verbosity-flag = "1.0.1"
 linya = "0.3"
 nutmeg = "0.1"
 pbr = "1.0"

@@ -11,6 +11,9 @@ use prodctrl::db::bom;
 struct Args {
     #[clap(subcommand)]
     command: Commands,
+
+    #[clap(flatten)]
+    verbose: clap_verbosity_flag::Verbosity,
 }
 
 #[derive(Debug, Subcommand)]
