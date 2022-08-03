@@ -4,6 +4,8 @@ use clap::Parser;
 use super::{CliMenuApp, Menu};
 use super::questions;
 
+/// Cli arguments that takes a job and shipment
+// TODO: refactor to use api::JobShipment
 #[derive(Parser, Debug, Default)]
 #[clap(author, version, about)]
 pub struct JobShipCli {

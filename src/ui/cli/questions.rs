@@ -1,7 +1,10 @@
 
+//! Common questions
+
 use regex::{Regex, RegexSet};
 use requestty::{OnEsc, prompt_one, Question};
 
+/// Question to ask for a job number (with structure)
 pub fn job() -> String {
     let validation_set = RegexSet::new( &[r"^\d{1,7}$", r"^\d{7}[[:alpha:]]$"] ).unwrap();
     let job_re = Regex::new( r"^\d{7}[[:alpha:]]$" ).unwrap();
@@ -21,6 +24,7 @@ pub fn job() -> String {
         prompt_one(question).unwrap().as_string().unwrap().into()
 }
 
+/// Question to ask for a shipment number
 pub fn shipment() -> u32 {
     let question = Question::int("shipment")
         .on_esc(OnEsc::Terminate)
