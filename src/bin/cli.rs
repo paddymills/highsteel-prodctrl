@@ -4,22 +4,32 @@ use prodctrl::prelude::*;
 use clap::{Parser, Subcommand};
 use prodctrl::JobShipment;
 use prodctrl::db::bom;
-// use prodctrl::fs::cnf::ProdFileProcessor;
 
+// TODO: completions
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
 struct Args {
     #[clap(subcommand)]
     command: Commands,
-
-    #[clap(short, long, help="Run without producing output or moving files")]
-    dry_run: bool,
 }
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Bom database ops
     Bom {
-        job_ship: JobShipment
+        job_ship: JobShipment,
+
+        #[clap(short, long)]
+        /// Generate xml files for plate parts
+        xml: bool,
+
+        #[clap(short, long)]
+        /// Secondary parts only
+        secondary: bool,
+
+        #[clap(short, long)]
+        /// Plate parts only
+        plate: bool,
     }
 }
 
@@ -30,12 +40,13 @@ async fn main() -> Result<()> {
 
     use Commands::*;
     match &args.command {
-        Bom { job_ship } => {
+        Bom { job_ship, .. } => {
             let pool = bom::build_pool().await;
-            bom::init_bom( pool, &job_ship.job, job_ship.ship.parse()? )
+            let parts = bom::init_bom( pool, &job_ship.job, job_ship.ship.parse()? )
                 .await?
-                .into_iter()
-                .for_each( |part| println!("{:#?}", part) );
+                .into_iter();
+
+            parts.for_each( |part| println!("{:#?}", part) );
         }
     }
 
