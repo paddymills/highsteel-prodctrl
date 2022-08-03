@@ -42,3 +42,13 @@ pub mod ui;
 pub type Error = Box<dyn std::error::Error>;
 /// Dynamic result type for convenience using [`crate::Error`]
 pub type Result<T> = std::result::Result<T, Error>;
+
+/// Common types and utils
+/// 
+/// ```
+/// use prodctrl::prelude::*;
+/// ```
+pub mod prelude {
+    pub use super::Error;
+    pub use super::Result;
+}
