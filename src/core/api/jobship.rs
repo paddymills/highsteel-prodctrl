@@ -1,5 +1,13 @@
 
-use std::fmt::{Display, Formatter, Result};
+use regex::Regex;
+use std::{
+    fmt::{self, Display, Formatter},
+    str::FromStr
+};
+
+lazy_static! {
+    static ref JOBSHIP_RE: Regex = Regex::new(r"^(\d{7}[[:alpha:]])-(\d+)$").expect("failed to build regex");
+}
 
 /// Job and Shipment
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -9,11 +17,30 @@ pub struct JobShipment {
     pub job: String,
     /// Shipment number
     // TODO: refactor as number
+    // TODO: refactor as renamed 'shipment'
     pub ship: String
 }
 
+impl FromStr for JobShipment {
+    type Err = std::fmt::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match JOBSHIP_RE.captures(s) {
+            Some(cap) => {
+                Ok(
+                    Self {
+                        job: cap.get(1).unwrap().as_str().into(),
+                        ship: cap.get(2).unwrap().as_str().into(),
+                    }
+                )
+            },
+            None => panic!("invalid job-shipment")
+        }
+    }
+}
+
 impl Display for JobShipment {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}-{}", self.job, self.ship)
     }
 }
