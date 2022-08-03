@@ -30,8 +30,10 @@ pub async fn init_bom(pool: Pool<ConnectionManager>, job: &str, shipment: i32) -
     Ok(res)
 }
 
+/// Trait to add Bom db operations to database Client
 #[async_trait]
 pub trait BomDbOps<T> {
+    /// Gets all parts and their quantities or a given [`JobShipment`]
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T>;
 }
 
