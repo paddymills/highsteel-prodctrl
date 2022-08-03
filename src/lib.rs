@@ -41,6 +41,4 @@ pub mod ui;
 /// Dynamic error type for convenience
 pub type Error = Box<dyn std::error::Error>;
 /// Dynamic result type for convenience using [`crate::Error`]
-/// 
-/// [`crate::Error`]: crate::Error
 pub type Result<T> = std::result::Result<T, Error>;
