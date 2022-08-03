@@ -4,10 +4,24 @@ use std::fmt::{self, Display, Formatter};
 /// material type (plate, shape, etc.)
 #[derive(Debug)]
 pub enum Commodity {
-    Plate { thk: f32, wid: f32 },
+    /// Flat plate
+    Plate {
+        /// Plate thickness
+        thk: f32,
+        /// Plate width
+        wid: f32
+    },
 
     // TODO: refactor section to use AISC db
-    Shape { thk: f32, section: String },
+    /// Structural shape, represented by thickness and section name
+    Shape {
+        /// Shape thickness (for punching mainly)
+        thk: f32,
+        /// Shape section name
+        section: String
+    },
+
+    /// Miscellaneous commodities that are not currently of interest (nuts, bolts, etc.)
     Skip(String)
 }
 

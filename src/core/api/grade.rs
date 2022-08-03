@@ -14,6 +14,7 @@ pub struct Grade {
 }
 
 impl Grade {
+    /// Crates a new grade from a given spec, grade, test and zone
     pub fn new(_spec: &str, _grade: &str, _test: &str, mut zone: u8) -> Self {
         let mut spec  = String::from(_spec);
         let mut grade = String::from(_grade);
@@ -49,6 +50,10 @@ impl Grade {
         Self { spec, grade, test, zone }
     }
 
+    /// Coerces non-charpy materials to charpy (i.e. A709-50 as A709-50T2).
+    /// Useful for Sigmanest, where all plate is charpy at the least.
+    /// Note that materials that are not applicable to charpy (i.e. A240-304)
+    /// will not return with the charpy designation.
     pub fn force_cvn(&self) -> String {
         match self.test {
             Test::None => format!("{}-{}{:}{}", self.spec, self.grade, Test::Charpy, self.zone),

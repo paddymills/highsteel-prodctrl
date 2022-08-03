@@ -2,10 +2,13 @@
 use std::fmt::{Display, Formatter, Result};
 
 /// Job and Shipment
-// TODO: refactor ship: String -> shipment: u32
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct JobShipment {
+    /// Job number (with structure letter)
+    // TODO: split job and structure
     pub job: String,
+    /// Shipment number
+    // TODO: refactor as number
     pub ship: String
 }
 
