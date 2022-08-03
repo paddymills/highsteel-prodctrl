@@ -21,11 +21,17 @@ const DELIM: u8 = b'\t';
 
 // lazy static globals that are non-const
 lazy_static! {
-    // regexes
+    // not in SAP to match against material master
     static ref NOT_IN_SAP: Regex = Regex::new(r"^NO[\d\s\w]+SAP$").expect("failed to build regex");
+
+    // for WBS Element validation
     static ref VALID_WBS:  Regex = Regex::new(r"D-\d{7}-\d{5}").expect("failed to build regex");
 }
 
+/// Production file processor
+/// 
+/// Holds reader and writer builders
+// TODO: refactor if the builders are not needed
 #[derive(Debug, Default)]
 pub struct ProdFileProcessor {
     reader: ReaderBuilder,
@@ -33,6 +39,7 @@ pub struct ProdFileProcessor {
 }
 
 impl ProdFileProcessor {
+    /// Create new reader/writer builders
     pub fn new() -> Self {
         let mut reader = ReaderBuilder::new();
         reader
@@ -46,6 +53,9 @@ impl ProdFileProcessor {
         Self { reader, writer }
     }
 
+    /// Process all files in [`CNF_FILES`]
+    /// 
+    /// [`CNF_FILES`]: `static@super::paths::CNF_FILES`
     pub fn process_files(&self) -> Result<(), Error> {
         let files = get_ready_files()?;
         let progress = Mutex::new( Progress::new() );

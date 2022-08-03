@@ -1,19 +1,20 @@
 
 //! Path tools for confirmation files
+// TODO: refactor into paths module
 
 use regex::Regex;
 use std::io::Error;
 use std::path::{Path, PathBuf};
 
 lazy_static! {
-    // paths
-    // TODO: refactor into paths module
+    /// Base confirmation files folder
     pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files\test");
 
-    // regex
-    static ref PROD_FILE_NAME: Regex = Regex::new(r"Production_(\d{14}).ready").expect("failed to build regex");
+    /// Production file pattern
+    pub static ref PROD_FILE_NAME: Regex = Regex::new(r"Production_(\d{14}).ready").expect("failed to build regex");
 }
 
+/// Get all confirmation files to be processed
 pub fn get_ready_files() -> Result<Vec<PathBuf>, Error> {
     let files = std::fs::read_dir(&*CNF_FILES)?
         .filter_map(|f| f.ok())
@@ -24,11 +25,17 @@ pub fn get_ready_files() -> Result<Vec<PathBuf>, Error> {
     Ok(files)
 }
 
+/// Confirmation file path functions to extend to [`std::path::PathBuf`]
 pub trait CnfFilePaths {
+    /// Create a new production file name from current timestamp
     fn new_prod_file() -> Self;
+    /// Create a new issue file name from current timestamp
     fn new_issue_file() -> Self;
+    /// Create an archive file name from an existing file name
     fn archive_file(self: &Self) -> Self;
+    /// Create an backup file name from an existing file name
     fn backup_file(self: &Self) -> Self;
+    /// Create an issue file name from an existing file name
     fn issue_file(self: &Self) -> Self;
 }
 
