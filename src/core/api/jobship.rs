@@ -6,6 +6,7 @@ use std::{
 };
 
 lazy_static! {
+    // TODO: move to regex module in core
     static ref JOBSHIP_RE: Regex = Regex::new(r"^(\d{7}[[:alpha:]])-(\d+)$").expect("failed to build regex");
 }
 
@@ -13,7 +14,7 @@ lazy_static! {
 #[derive(Clone, Debug, Default, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct JobShipment {
     /// Job number (with structure letter)
-    // TODO: split job and structure
+    // TODO: split job into project and structure
     pub job: String,
     /// Shipment number
     // TODO: refactor as number
@@ -34,7 +35,12 @@ impl FromStr for JobShipment {
                     }
                 )
             },
-            None => panic!("invalid job-shipment")
+            None => {
+                eprintln!("Failed to parse job-shipment: {}", s);
+
+                // TODO: custom error
+                panic!("invalid job-shipment")
+            }
         }
     }
 }
