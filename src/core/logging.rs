@@ -13,7 +13,7 @@ pub fn init_logger(app: &str) {
     let log_name = format!(r"test\{}.log", app);
 
     WriteLogger::init(
-        LevelFilter::Debug,
+        LevelFilter::Warn,
         Config::default(),
         File::create(log_name).expect("failed to create log")
         // stderr()
