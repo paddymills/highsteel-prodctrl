@@ -35,12 +35,13 @@ lazy_static! {
 #[derive(Debug, Default)]
 pub struct ProdFileProcessor {
     reader: ReaderBuilder,
-    writer: WriterBuilder
+    writer: WriterBuilder,
+    dry_run: bool,
 }
 
 impl ProdFileProcessor {
     /// Create new reader/writer builders
-    pub fn new() -> Self {
+    pub fn new(dry_run: bool) -> Self {
         let mut reader = ReaderBuilder::new();
         reader
             .delimiter(DELIM);
@@ -50,7 +51,7 @@ impl ProdFileProcessor {
             .has_headers(false)
             .delimiter(DELIM);
 
-        Self { reader, writer }
+        Self { reader, writer, dry_run }
     }
 
     /// Process all files in [`CNF_FILES`]
@@ -82,43 +83,51 @@ impl ProdFileProcessor {
         Ok(())
     }
 
-    /// Modifications:
-    /// - Plant 3 material to RAW
-    /// - Skip items for material not in SAP
-    /// - Non-production pieces to scrap
-    /// - SAP part name if different from SN
     pub fn process_file(&self, filepath: &PathBuf) -> Result<(), Error> {
+        //! Modifications:
+        //! - Plant 3 material to RAW
+        //! - Skip items for material not in SAP
+        //! - Issue items without a valid WBS Element
+        //! - Issue Non-production pieces
+        //! - SAP part name if different from SN
 
         let mut reader = self.reader.from_path(filepath)?;
         reader.set_headers( StringRecord::from(HEADERS.to_vec()) );
         
         let results = reader.deserialize::<CnfFileRow>();
 
-        // find a way to check if file is empty
+        // TODO: find a way to check if file is empty
         {
 
             let mut prod_writer = self.writer.from_path( filepath.archive_file().as_path() )?;
             let mut issue_writer = self.writer.from_path( filepath.issue_file().as_path() )?;
 
             for result in results {
+                trace!("{:?}", result);
                 // TODO: log errors
                 let mut record = result.expect("Failed to deserialize row");
 
                 // filter out items based on material location
                 if SKIP_LOCS[..].contains(&record.matl_loc.as_deref()) {
+                    debug!("Skipping due to location: {:?}", &record.matl_loc);
                     continue;
                 }
     
                 // consume all HS02 material from RAW
                 if record.plant == Plant::Williamsport {
+                    debug!("Williamsport record; changing location to RAW");
                     record.matl_loc = Some("RAW".into());
                 }
     
                 if VALID_WBS.is_match(&record.part_wbs) {
+                    debug!("Valid WBS element: {}", &record.part_wbs);
+
                     // write new file with changes
                     prod_writer.serialize(record)?;
                     prod_writer.flush()?;
                 } else {
+                    debug!("Invalid WBS element: {}", &record.part_wbs);
+
                     // send to issue file;
                     issue_writer.serialize::<IssueFileRow>(record.into())?;
                     issue_writer.flush()?;
@@ -126,9 +135,11 @@ impl ProdFileProcessor {
             }
         }
 
-        // move file to backup
-        std::fs::copy(filepath, filepath.backup_file().as_path()).expect("failed to backup file");
-        // std::fs::remove_file(filepath).expect("failed to remove original file");
+        if !self.dry_run {
+            // move file to backup
+            std::fs::copy(filepath, filepath.backup_file().as_path()).expect("failed to backup file");
+            // std::fs::remove_file(filepath).expect("failed to remove original file");
+        }
     
         Ok(())
     }
