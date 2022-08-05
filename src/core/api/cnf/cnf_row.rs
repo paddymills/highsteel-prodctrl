@@ -1,7 +1,9 @@
 
 use crate::Plant;
 
-/// Confirmation file row
+/// Confirmation file row ([SAP Confirmation Files])
+/// 
+/// [SAP Confirmation Files]: crate::fs::cnf
 /// 
 /// tab delimited row in the format
 /// ```tsv

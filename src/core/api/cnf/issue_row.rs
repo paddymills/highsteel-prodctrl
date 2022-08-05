@@ -5,11 +5,16 @@ use crate::Plant;
 use super::CnfFileRow;
 
 lazy_static! {
+    // old, non-hd, wbs element
     static ref OLD_WBS: Regex = Regex::new(r"S-(\d{7})-2-(\d{2})").expect("Failed to build OLD_WBS Regex");
-    static ref JOB_PART: Regex = Regex::new(r"\d{7}[[:alpha:]]-").expect("Failed to build JOB_PART Regex");
+
+    // Production job number match
+    static ref PROD_JOB: Regex = Regex::new(r"S-\d{7}").expect("Failed to build JOB_PART Regex");
 }
 
-/// Issue file row
+/// Issue file row ([SAP Confirmation Files])
+/// 
+/// [SAP Confirmation Files]: crate::fs::cnf
 /// 
 /// ### Text format
 /// tab delimited row in the format:
@@ -102,7 +107,7 @@ impl Into<IssueFileRow> for CnfFileRow {
 }
 
 fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
-    match JOB_PART.is_match(&row.mark) {
+    match PROD_JOB.is_match(&row.job) {
         // Part name has a job number prefix -> project stock issuing
         true => {
             // infer job and shipment from part WBS element

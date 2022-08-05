@@ -92,6 +92,10 @@ impl ProdFileProcessor {
         //! - Issue Non-production pieces
         //! - SAP part name if different from SN
 
+        // TODO: use MRP name in sigmanest database
+
+        debug!("Processing file {:?}", filepath);
+
         let mut reader = self.reader.from_path(filepath)?;
         reader.set_headers( StringRecord::from(HEADERS.to_vec()) );
         
@@ -100,7 +104,7 @@ impl ProdFileProcessor {
         // TODO: find a way to check if file is empty
         {
 
-            let mut prod_writer = self.writer.from_path( filepath.archive_file().as_path() )?;
+            let mut prod_writer = self.writer.from_path( filepath.production_file().as_path() )?;
             let mut issue_writer = self.writer.from_path( filepath.issue_file().as_path() )?;
 
             for result in results {
@@ -138,7 +142,10 @@ impl ProdFileProcessor {
 
         if !self.dry_run {
             // move file to backup
-            std::fs::copy(filepath, filepath.backup_file().as_path()).expect("failed to backup file");
+            let backup = filepath.backup_file();
+            debug!("moving file to {:?}", backup);
+
+            std::fs::copy(filepath, backup.as_path()).expect("failed to backup file");
             // std::fs::remove_file(filepath).expect("failed to remove original file");
         }
     
