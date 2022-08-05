@@ -36,6 +36,8 @@ pub trait CnfFilePaths {
     /// Create an backup file name from an existing file name
     fn backup_file(self: &Self) -> Self;
     /// Create an issue file name from an existing file name
+    fn production_file(self: &Self) -> Self;
+    /// Create an issue file name from an existing file name
     fn issue_file(self: &Self) -> Self;
 }
 
@@ -60,7 +62,7 @@ impl CnfFilePaths for PathBuf {
     }
     
     fn backup_file(self: &Self) -> Self {
-        let mut path = CNF_FILES.join( "archive" );
+        let mut path = CNF_FILES.join( "backup" );
 
         // safe to unwrap Option<&OsStr> here
         //  because we will assume whoever consumes this api
@@ -69,9 +71,23 @@ impl CnfFilePaths for PathBuf {
     
         path
     }
+
+    fn production_file(self: &Self) -> Self {
+        let mut path = CNF_FILES.to_path_buf();
+
+        path.push("outbox");
+
+        // safe to unwrap Option<&OsStr> and Option<&str> here
+        //  because we already checked that it is a file
+        path.push( self.file_name().unwrap().to_str().unwrap() );
+    
+        path
+    }
     
     fn issue_file(self: &Self) -> Self {
         let mut path = CNF_FILES.to_path_buf();
+
+        path.push("outbox");
 
         // safe to unwrap Option<&OsStr> and Option<&str> here
         //  because we already checked that it is a file
