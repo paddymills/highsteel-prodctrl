@@ -11,7 +11,8 @@ use std::{
     path::PathBuf,
 };
 
-use super::{paths::*, CnfFileRow, Plant, IssueFileRow};
+use crate::{CnfFileRow, IssueFileRow, Plant};
+use super::paths::*;
 
 const HEADERS: [&str; 13] = [
     "Mark", "Job", "PartWbs", "PartLoc", "PartQty", "PartUom", "Matl", "MatlWbs" , "MatlQty", "MatlUom", "MatlLoc", "Plant", "Program"

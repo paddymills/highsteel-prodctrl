@@ -1,5 +1,13 @@
 
+use regex::Regex;
 use serde::{Deserialize, Serialize};
+
+use crate::Plant;
+
+lazy_static! {
+    static ref OLD_WBS: Regex = Regex::new(r"S-(\d{7})-2-(\d{2})").expect("Failed to build OLD_WBS Regex");
+    static ref JOB_PART: Regex = Regex::new(r"\d{7}[[:alpha:]]-").expect("Failed to build JOB_PART Regex");
+}
 
 /// Confirmation file row
 /// 
@@ -104,18 +112,6 @@ pub struct IssueFileRow {
     pub program:  String
 }
 
-/// SAP Plant
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
-pub enum Plant {
-    /// Lancaster (HS01)
-    #[serde(rename = "HS01")]
-    Lancaster,
-    /// Williamsport (HS02)
-    #[serde(rename = "HS02")]
-    Williamsport
-}
-
-
 /// Issue codes
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub enum IssueCode {
@@ -137,10 +133,59 @@ pub enum IssueCode {
 }
 
 impl Into<IssueFileRow> for CnfFileRow {
+    /// Convert a [`CnfFileRow`] into an [`IssueFileRow`]
     fn into(self) -> IssueFileRow {
-        // TODO: infer code, user1, user2 from database
-        let code = IssueCode::ProjectFromProject;
-        let (user1, user2) = ("D-1200211".into(), "01".into());
+        let (code, user1, user2) = match JOB_PART.is_match(&self.mark) {
+            // Part name has a job number prefix -> project stock issuing
+            true => {
+                // infer job and shipment from part WBS element
+                let (user1, user2) = match OLD_WBS.captures(&self.part_wbs) {
+                    Some(caps) => (
+                        format!("D-{}", caps.get(1).unwrap().as_str()),
+                        caps.get(2).unwrap().as_str().into()
+                    ),
+                    None => {
+                        // TODO: handle case of D-* wbs
+                        error!("failed to parse Part WBS Element: {}", &self.part_wbs);
+        
+                        panic!("failed to parse Part WBS Element")
+                    }
+                };
+
+                let code = match &self.matl_wbs {
+                    // project stock material
+                    Some(wbs) => {
+                        // part and material have the same project
+                        if wbs.starts_with(&user1) { IssueCode::ProjectFromProject }
+
+                        // part and material have different projects
+                        else { IssueCode::ProjectFromOtherProject }
+                    },
+
+                    // plant stock material
+                    None => IssueCode::ProjectFromStock
+                };
+
+                (code, user1, user2)
+            },
+
+            // Part name does not have a job number prefix -> cost center issuing
+            false => {
+                let code = match &self.matl_wbs {
+                    Some(_) => IssueCode::CostCenterFromProject,
+                    None => IssueCode::CostCenterFromStock
+                };
+
+                // infer cost center and G/L account
+                // TODO: fetch cost center from database
+                let user1 = "2062".into();
+
+                // TODO: infer if table parts (different code, which I need to know)
+                let user2 = "637118".into();
+
+                (code, user1, user2)
+            }
+        };
 
         IssueFileRow {
             code, user1, user2,

@@ -2,10 +2,9 @@
 #[macro_use] extern crate log;
 
 use clap::Parser;
-use prodctrl::{
-    logging,
-    fs::cnf::ProdFileProcessor
-};
+use simplelog::{Config, WriteLogger};
+use std::fs::File;
+use prodctrl::fs::cnf::ProdFileProcessor;
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about = "Confirmation files for SAP processing")]
@@ -19,9 +18,14 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), prodctrl::Error> {
-    logging::init_logger("Sap Confirmation Files");
-
     let args = Args::parse();
+
+    WriteLogger::init(
+        args.verbose.log_level_filter(),
+        Config::default(),
+        File::create("test/Sap Confirmation Files.log").expect("failed to create log")
+    ).expect("Failed to init logger");
+
     debug!("{:?}", args);
 
     let processor = ProdFileProcessor::new(args.dry_run);
