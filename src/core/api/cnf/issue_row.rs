@@ -7,6 +7,8 @@ use super::CnfFileRow;
 lazy_static! {
     // old, non-hd, wbs element
     static ref OLD_WBS: Regex = Regex::new(r"S-(\d{7})-2-(\d{2})").expect("Failed to build OLD_WBS Regex");
+    // HD wbs element
+    static ref HD_WBS: Regex = Regex::new(r"D-(\d{7})-\d{5}").expect("Failed to build HD_WBS Regex");
 
     // Production job number match
     static ref PROD_JOB: Regex = Regex::new(r"S-\d{7}").expect("Failed to build JOB_PART Regex");
@@ -117,10 +119,18 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
                     caps.get(2).unwrap().as_str().into()
                 ),
                 None => {
-                    // TODO: handle case of D-* wbs
-                    error!("failed to parse Part WBS Element: {}", &row.part_wbs);
-    
-                    panic!("failed to parse Part WBS Element")
+                    if let Some(caps) = HD_WBS.captures(&row.part_wbs) {
+                        // TODO: fetch shipment from database
+                        (
+                            format!("D-{}", caps.get(1).unwrap().as_str()),
+                            "01".into()
+                        )
+                    } else {
+                        error!("failed to parse Part WBS Element: {}", &row.part_wbs);
+        
+                        panic!("failed to parse Part WBS Element")
+                    }
+
                 }
             };
 
@@ -150,7 +160,7 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
 
             // infer cost center and G/L account
             // TODO: fetch cost center from database
-            let user1 = "2062".into();
+            let user1 = "20xx".into();
 
             // TODO: infer if table parts
             // if is_table_parts {
