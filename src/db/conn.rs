@@ -8,11 +8,8 @@ use tokio_util::compat::TokioAsyncWriteCompatExt;
 pub use super::prelude::*;
 
 /// Builds a connection pool for a database
-pub async fn build_db_pool(name: String, config: impl IntoConfig, size: u32) -> DbPool {
-    // TODO: dynamic debug padding for name
-    debug!("****************************************");
-    debug!("** init db pool for {} *******************", name);
-    debug!("****************************************");
+pub async fn build_db_pool(name: &str, config: impl IntoConfig, size: u32) -> DbPool {
+    debug!("** init {} db pool", name);
 
     let mgr = match ConnectionManager::build(config) {
         Ok(conn_mgr) => conn_mgr,
@@ -35,7 +32,7 @@ pub async fn build_db_pool(name: String, config: impl IntoConfig, size: u32) -> 
 }
 
 /// Builds a single database connection
-pub async fn build_db_conn(name: String, config: impl IntoConfig) -> DbClient {
+pub async fn build_db_conn(name: &str, config: impl IntoConfig) -> DbClient {
     debug!("** > building {} db connection", name);
 
     let cfg = config.into_config().expect("Failed to convert config");

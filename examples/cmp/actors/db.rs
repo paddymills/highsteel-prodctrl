@@ -14,7 +14,7 @@ lazy_static!(
         debug!("** init Bom db pool  *******************");
         debug!("****************************************");
 
-        let mgr = match ConnectionManager::build(prodctrl::db::HssConfig::Bom) {
+        let mgr = match ConnectionManager::build(prodctrl::db::HssDatabase::Bom) {
             Ok(conn_mgr) => conn_mgr,
             Err(_) => panic!("ConnectionManager failed to connect to database")
         };
@@ -41,7 +41,7 @@ lazy_static!(
         debug!("** init Sndb db pool  ******************");
         debug!("****************************************");
 
-        let mgr = match ConnectionManager::build(prodctrl::db::HssConfig::Sigmanest) {
+        let mgr = match ConnectionManager::build(prodctrl::db::HssDatabase::Sigmanest) {
             Ok(conn_mgr) => conn_mgr,
             Err(_) => panic!("ConnectionManager failed to connect to database")
         };

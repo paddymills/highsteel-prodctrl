@@ -6,7 +6,7 @@ use bb8::Pool;
 use bb8_tiberius::ConnectionManager;
 use tiberius::Query;
 
-use crate::db::HssConfig;
+use crate::db::HssDatabase;
 use crate::Part;
 use crate::ui::cli::CliMenuApp;
 
@@ -31,7 +31,7 @@ where
 
     /// create new app
     pub async fn new() -> Self {
-        let mgr = match ConnectionManager::build(HssConfig::Bom) {
+        let mgr = match ConnectionManager::build(HssDatabase::Bom) {
             Ok(conn_mgr) => conn_mgr,
             Err(_) => panic!("ConnectionManager failed to connect to database")
         };
