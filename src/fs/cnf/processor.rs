@@ -27,32 +27,38 @@ lazy_static! {
 
     // for WBS Element validation
     static ref VALID_WBS:  Regex = Regex::new(r"D-\d{7}-\d{5}").expect("failed to build regex");
+
+    // .ready file reader/writer factories
+    // TODO: refactor into struct, with convenience (from_path) methods
+    static ref READY_READER: ReaderBuilder = {
+        let mut reader = ReaderBuilder::new();
+        reader
+            .delimiter(DELIM);
+
+        reader
+    };
+    static ref READY_WRITER: WriterBuilder = {
+        let mut writer = WriterBuilder::new();
+        writer
+            .has_headers(false)
+            .delimiter(DELIM);
+
+        writer
+    };
 }
 
 /// Production file processor
 /// 
 /// Holds reader and writer builders
-// TODO: refactor if the builders are not needed
 #[derive(Debug, Default)]
 pub struct ProdFileProcessor {
-    reader: ReaderBuilder,
-    writer: WriterBuilder,
     dry_run: bool,
 }
 
 impl ProdFileProcessor {
     /// Create new reader/writer builders
     pub fn new(dry_run: bool) -> Self {
-        let mut reader = ReaderBuilder::new();
-        reader
-            .delimiter(DELIM);
-
-        let mut writer = WriterBuilder::new();
-        writer
-            .has_headers(false)
-            .delimiter(DELIM);
-
-        Self { reader, writer, dry_run }
+        Self { dry_run }
     }
 
     /// Process all files in [`CNF_FILES`]
@@ -96,7 +102,7 @@ impl ProdFileProcessor {
 
         debug!("Processing file {:?}", filepath);
 
-        let mut reader = self.reader.from_path(filepath)?;
+        let mut reader = READY_READER.from_path(filepath)?;
         reader.set_headers( StringRecord::from(HEADERS.to_vec()) );
         
         let results = reader.deserialize::<CnfFileRow>();
@@ -104,8 +110,8 @@ impl ProdFileProcessor {
         // TODO: find a way to check if file is empty
         {
 
-            let mut prod_writer = self.writer.from_path( filepath.production_file().as_path() )?;
-            let mut issue_writer = self.writer.from_path( filepath.issue_file().as_path() )?;
+            let mut prod_writer = READY_WRITER.from_path( filepath.production_file().as_path() )?;
+            let mut issue_writer = READY_WRITER.from_path( filepath.issue_file().as_path() )?;
 
             for result in results {
                 trace!("{:?}", result);
