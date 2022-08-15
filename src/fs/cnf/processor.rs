@@ -7,12 +7,14 @@ use std::sync::Mutex;
 
 use regex::Regex;
 use std::{
+    fs,
     io::Error,
     path::PathBuf,
 };
 
 use crate::{CnfFileRow, IssueFileRow, Plant};
 use super::paths::*;
+use crate::fs::is_empty_file;
 
 const HEADERS: [&str; 13] = [
     "Mark", "Job", "PartWbs", "PartLoc", "PartQty", "PartUom", "Matl", "MatlWbs" , "MatlQty", "MatlUom", "MatlLoc", "Plant", "Program"
@@ -100,23 +102,29 @@ impl ProdFileProcessor {
 
         // TODO: use MRP name in sigmanest database
 
-        debug!("Processing file {:?}", filepath);
+        // check if file is empty
+        if is_empty_file(filepath) {
+            info!("Skipping empty file {:?}", filepath);
+            return Ok(())
+        }
+
+        info!("Processing file {:?}", filepath);
 
         let mut reader = READY_READER.from_path(filepath)?;
         reader.set_headers( StringRecord::from(HEADERS.to_vec()) );
         
         let results = reader.deserialize::<CnfFileRow>();
 
-        // TODO: find a way to check if file is empty
+        let out_prod_file = filepath.production_file();
+        let out_issue_file = filepath.issue_file();
+
         {
-
-            let mut prod_writer = READY_WRITER.from_path( filepath.production_file().as_path() )?;
-            let mut issue_writer = READY_WRITER.from_path( filepath.issue_file().as_path() )?;
-
+            let mut prod_writer = READY_WRITER.from_path( out_prod_file.as_path() )?;
+            let mut issue_writer = READY_WRITER.from_path( out_issue_file.as_path() )?;
+            
             for result in results {
                 trace!("{:?}", result);
-                // TODO: log errors
-                let mut record = result.expect("Failed to deserialize row");
+                let mut record = result.map_err(|e| error!("Failed to deserialize row: {}", e)).unwrap();
 
                 // filter out items based on material location
                 if SKIP_LOCS[..].contains(&record.matl_loc.as_deref()) {
@@ -135,14 +143,25 @@ impl ProdFileProcessor {
 
                     // write new file with changes
                     prod_writer.serialize(record)?;
-                    prod_writer.flush()?;
                 } else {
                     debug!("Invalid WBS element: {}", &record.part_wbs);
-
+                    
                     // send to issue file;
                     issue_writer.serialize::<IssueFileRow>(record.into())?;
-                    issue_writer.flush()?;
                 }
+            }
+
+            // flush writer buffers
+            prod_writer.flush()?;
+            issue_writer.flush()?;
+        }
+
+        // cleanup empty files
+        // files are created (regardless of use) at Writer creation
+        for file in [out_prod_file, out_issue_file] {
+            if is_empty_file(&file) {
+                // failure is not critical, so ignore any errors
+                let _ = fs::remove_file(file);
             }
         }
 
