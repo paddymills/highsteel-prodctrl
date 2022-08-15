@@ -57,7 +57,7 @@ pub struct IssueFileRow {
     /// Material WBS Element
     pub matl_wbs: Option<String>,
     /// Material quantity
-    pub matl_qty: f32,
+    pub matl_qty: f64,
     /// Material unit of measure
     pub matl_uom: String,
     /// Material storage location

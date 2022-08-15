@@ -34,7 +34,7 @@ pub struct CnfFileRow {
     /// This is the amount consumed for all parts.
     /// 
     /// `{qty per part} * {part_qty} = {matl_qty}`
-    pub matl_qty: f32,
+    pub matl_qty: f64,
     /// Material unit of measure (IN2, usually)
     pub matl_uom: String,
     /// Material storage location
