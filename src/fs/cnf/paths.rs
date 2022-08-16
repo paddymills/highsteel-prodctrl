@@ -8,7 +8,8 @@ use std::path::{Path, PathBuf};
 
 lazy_static! {
     /// Base confirmation files folder
-    pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files\test");
+    pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files");
+    pub static ref CNF_OUTBOX: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\Outbox");
 
     /// Production file pattern
     pub static ref PROD_FILE_NAME: Regex = Regex::new(r"Production_(\d{14}).ready").expect("failed to build regex");
@@ -51,7 +52,7 @@ impl CnfFilePaths for PathBuf {
     }
     
     fn archive_file(self: &Self) -> Self {
-        let mut path = CNF_FILES.join( "archive" );
+        let mut path = CNF_FILES.join( "processed" );
 
         // safe to unwrap Option<&OsStr> here
         //  because we will assume whoever consumes this api
@@ -62,7 +63,7 @@ impl CnfFilePaths for PathBuf {
     }
     
     fn backup_file(self: &Self) -> Self {
-        let mut path = CNF_FILES.join( "backup" );
+        let mut path = CNF_FILES.join( "original" );
 
         // safe to unwrap Option<&OsStr> here
         //  because we will assume whoever consumes this api
@@ -104,9 +105,10 @@ mod tests {
 
     #[test]
     fn test_paths() {
-        let test_file = PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\Production_20220105083000.ready");
-        assert_eq!(test_file.archive_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\archive\Production_20220105083000.ready"));
-        assert_eq!(test_file.backup_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\backup\Production_20220105083000.ready"));
-        assert_eq!(test_file.issue_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\test\Issue_20220105083000.ready"));
+        let test_file = PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\Production_20220105083000.ready");
+        assert_eq!(test_file.archive_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\processed\Production_20220105083000.ready"));
+        assert_eq!(test_file.backup_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\SAP Data Files\original\Production_20220105083000.ready"));
+        assert_eq!(test_file.production_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\Outbox\Production_20220105083000.ready"));
+        assert_eq!(test_file.issue_file(), PathBuf::from(r"\\hssieng\SNData\SimTrans\Outbox\Issue_20220105083000.ready"));
     }
 }
