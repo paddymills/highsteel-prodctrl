@@ -2,7 +2,7 @@
 use regex::Regex;
 
 use crate::Plant;
-use super::CnfFileRow;
+use super::{CnfFileRow, cnf_serde::three_digit_f64};
 
 lazy_static! {
     // old, non-hd, wbs element
@@ -57,6 +57,7 @@ pub struct IssueFileRow {
     /// Material WBS Element
     pub matl_wbs: Option<String>,
     /// Material quantity
+    #[serde(serialize_with="three_digit_serde")]
     pub matl_qty: f64,
     /// Material unit of measure
     pub matl_uom: String,

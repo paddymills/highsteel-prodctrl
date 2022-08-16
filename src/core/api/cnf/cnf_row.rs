@@ -1,5 +1,6 @@
 
 use crate::Plant;
+use super::cnf_serde::three_digit_f64;
 
 /// Confirmation file row ([SAP Confirmation Files])
 /// 
@@ -34,6 +35,7 @@ pub struct CnfFileRow {
     /// This is the amount consumed for all parts.
     /// 
     /// `{qty per part} * {part_qty} = {matl_qty}`
+    #[serde(serialize_with="three_digit_serde")]
     pub matl_qty: f64,
     /// Material unit of measure (IN2, usually)
     pub matl_uom: String,
