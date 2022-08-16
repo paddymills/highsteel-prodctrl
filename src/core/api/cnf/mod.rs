@@ -1,4 +1,6 @@
 
+// TODO: migrate use of part/matl data to separate structs and flatten with serde
+
 mod cnf_row;
 pub use cnf_row::CnfFileRow;
 
