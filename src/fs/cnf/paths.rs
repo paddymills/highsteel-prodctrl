@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 lazy_static! {
     /// Base confirmation files folder
     pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files");
+    /// Confirmation files outbox (to be picked up by workflow)
     pub static ref CNF_OUTBOX: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\Outbox");
 
     /// Production file pattern
@@ -74,9 +75,7 @@ impl CnfFilePaths for PathBuf {
     }
 
     fn production_file(self: &Self) -> Self {
-        let mut path = CNF_FILES.to_path_buf();
-
-        path.push("outbox");
+        let mut path = CNF_OUTBOX.to_path_buf();
 
         // safe to unwrap Option<&OsStr> and Option<&str> here
         //  because we already checked that it is a file
@@ -86,9 +85,7 @@ impl CnfFilePaths for PathBuf {
     }
     
     fn issue_file(self: &Self) -> Self {
-        let mut path = CNF_FILES.to_path_buf();
-
-        path.push("outbox");
+        let mut path = CNF_OUTBOX.to_path_buf();
 
         // safe to unwrap Option<&OsStr> and Option<&str> here
         //  because we already checked that it is a file
