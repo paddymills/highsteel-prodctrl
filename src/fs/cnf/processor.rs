@@ -166,12 +166,20 @@ impl ProdFileProcessor {
         }
 
         if !self.dry_run {
-            // move file to backup
+            // move original file to backup
             let backup = filepath.backup_file();
             debug!("moving file to {:?}", backup);
+            fs::copy(filepath, backup).expect("failed to backup file");
+            fs::remove_file(filepath).expect("failed to remove original file");
 
-            std::fs::copy(filepath, backup.as_path()).expect("failed to backup file");
-            // std::fs::remove_file(filepath).expect("failed to remove original file");
+            // archive processed files
+            for file in [out_prod_file, out_issue_file] {
+                // ignore failure since it is most likely due to
+                // a file not existing (empty file was already cleaned up)
+                if let Ok(_) = fs::copy(file, file.archive_file()) {
+                    debug!("archived processed file: {}", file);
+                }
+            }
         }
     
         Ok(())
