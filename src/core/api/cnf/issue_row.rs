@@ -1,5 +1,5 @@
 
-use regex::Regex;
+use regex::{Regex, RegexSetBuilder, RegexSet};
 
 use crate::Plant;
 
@@ -14,6 +14,21 @@ lazy_static! {
 
     // Production job number match
     static ref PROD_JOB: Regex = Regex::new(r"S-\d{7}").expect("Failed to build JOB_PART Regex");
+
+    // machine name pattern matching
+    static ref MACHINES: RegexSet = {
+        let names = vec!["gemini", "titan" , "mg", "farley", "ficep"];
+
+        // each name will must be begin and end with '-', '_', or string start/end
+        RegexSetBuilder::new(
+            names
+                .iter()
+                .map(|n| format!("(^|[_-]){}($|[_-])", n))
+        )
+            .case_insensitive(true)
+            .build()
+            .expect("failed to build machine name patterns")
+    };
 }
 
 /// Issue file row ([SAP Confirmation Files])
@@ -175,11 +190,10 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
             // TODO: fetch cost center from database
             let user1 = "20xx".into();
 
-            // TODO: infer if table parts
-            // if is_table_parts {
-            //     user2 = "634124"
-            // }
-            let user2 = "637118".into();
+            let user2 = match MACHINES.is_match(&row.mark) {
+                true  => "634124".into(),   // machine parts
+                false => "637118".into()    // all others
+            };
 
             (code, user1, user2)
         }
