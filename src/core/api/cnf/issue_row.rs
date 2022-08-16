@@ -2,7 +2,9 @@
 use regex::Regex;
 
 use crate::Plant;
-use super::{CnfFileRow, cnf_serde::three_digit_f64};
+
+use super::CnfFileRow;
+use super::cnf_serde::three_digit_f64;
 
 lazy_static! {
     // old, non-hd, wbs element
@@ -34,22 +36,32 @@ lazy_static! {
 /// | CC01 | MIGO 201 | Consumption for cost center from warehouse |
 /// | CC02 | MIGO [transfer from WBS] & 201 | Consumption for cost center from project |
 /// 
-/// ### User1 and User2 Columns
+/// ### User Columns
+/// 
+/// User columns are to fill in where the material is being charged,
+/// depending on what type of [transaction code](#transaction-codes) is used.
 /// 
 /// | code | user1 | user2 |
 /// |---|---|---|
 /// | PR* | `D-{job}` | Shipment |
-/// | CC* | Cost Center | G/L Account[^note] |
+/// | CC* | Cost Center | [G/L Account](#gl-accounts) |
+///
+/// ### G/L Accounts
 /// 
-/// [^note]: G/L Account should always be `637118`, unless for a machine project (i.e. CNC table parts)
+/// G/L accounts should be a `634xxx` code
+/// 
+/// | Usage | G/L Account |
+/// |---|---|
+/// | Machine Parts (i.e. CNC table parts) | `634124` |
+/// | Shop Supplies (default) | `637118` |
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all="PascalCase")]
 pub struct IssueFileRow {
     /// [Transaction code](#transaction-codes)
     pub code: IssueCode,
-    /// Project or Cost Center ([User1 Column](#user1-and-user2-columns))
+    /// Project or Cost Center ([User1 Column](#user-columns))
     pub user1: String,
-    /// Shipment/GL Account ([User2 Column](#user1-and-user2-columns))
+    /// Shipment/GL Account ([User2 Column](#user-columns))
     pub user2: String,
 
     /// Material master
@@ -57,7 +69,7 @@ pub struct IssueFileRow {
     /// Material WBS Element
     pub matl_wbs: Option<String>,
     /// Material quantity
-    #[serde(serialize_with="three_digit_serde")]
+    #[serde(serialize_with="three_digit_f64")]
     pub matl_qty: f64,
     /// Material unit of measure
     pub matl_uom: String,
