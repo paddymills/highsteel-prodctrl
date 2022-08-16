@@ -82,7 +82,7 @@ impl ProdFileProcessor {
         files.into_par_iter().for_each(|file| {
             match self.process_file(&file) {
                 Ok(_) => (),
-                Err(e) => eprintln!("Failed to parse file: {:?}", e)
+                Err(e) => error!("Failed to parse file: {:?}", e)
             }
 
             progress.lock().unwrap().inc_and_draw(&bar, 1);
@@ -158,8 +158,8 @@ impl ProdFileProcessor {
 
         // cleanup empty files
         // files are created (regardless of use) at Writer creation
-        for file in [out_prod_file, out_issue_file] {
-            if is_empty_file(&file) {
+        for file in [&out_prod_file, &out_issue_file] {
+            if is_empty_file(file) {
                 // failure is not critical, so ignore any errors
                 let _ = fs::remove_file(file);
             }
@@ -173,11 +173,11 @@ impl ProdFileProcessor {
             fs::remove_file(filepath).expect("failed to remove original file");
 
             // archive processed files
-            for file in [out_prod_file, out_issue_file] {
+            for file in [&out_prod_file, &out_issue_file] {
                 // ignore failure since it is most likely due to
                 // a file not existing (empty file was already cleaned up)
                 if let Ok(_) = fs::copy(file, file.archive_file()) {
-                    debug!("archived processed file: {}", file);
+                    debug!("archived processed file: {:?}", file);
                 }
             }
         }
