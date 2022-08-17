@@ -53,7 +53,6 @@ bb8-tiberius = { version = "0.12.0", optional = true }
 tiberius = { version = "0.10", features = [ "sql-browser-tokio", "integrated-auth-gssapi" ], optional = true }
 
 # async
-# TODO: remove async_once (only needed in examples)
 async_once = { version = "0.2", optional = true }
 async-trait = { version = "0.1", optional = true }
 crossbeam = { version = "0.8", optional = true }
@@ -71,6 +70,7 @@ optional = true
 
 [dev-dependencies]
 figment = { version = "0.10", features = ["env", "test", "toml"] }
+winres = "0.1"
 
 [[bin]]
 name = "sap_confirmation_files"
