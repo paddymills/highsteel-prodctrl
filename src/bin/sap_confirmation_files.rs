@@ -4,7 +4,10 @@
 use clap::Parser;
 use simplelog::{Config, WriteLogger};
 use std::fs::File;
-use prodctrl::fs::cnf::ProdFileProcessor;
+use prodctrl::fs::{
+    cnf::ProdFileProcessor,
+    timestamped_file
+};
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about = "Confirmation files for SAP processing")]
@@ -23,7 +26,9 @@ async fn main() -> Result<(), prodctrl::Error> {
     WriteLogger::init(
         args.verbose.log_level_filter(),
         Config::default(),
-        File::create("test/Sap Confirmation Files.log").expect("failed to create log")
+        File::create(
+            timestamped_file("log/cnf", "log")
+        ).expect("failed to create log")
     ).expect("Failed to init logger");
 
     debug!("{:?}", args);
