@@ -22,3 +22,10 @@ pub fn is_empty_file<P>(filepath: P) -> bool
         _ => false
     }
 }
+
+/// Create a filename with a naturally sortable timestamp
+pub fn timestamped_file(prefix: &str, ext: &str) -> String {
+    let timestamp = chrono::Local::now().format("%Y%m%d%H%M%S").to_string();
+
+    format!("{}_{}.{}", prefix, timestamp, ext)
+}

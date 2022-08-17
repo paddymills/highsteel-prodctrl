@@ -6,6 +6,8 @@ use regex::Regex;
 use std::io::Error;
 use std::path::{Path, PathBuf};
 
+use crate::fs::timestamped_file;
+
 lazy_static! {
     /// Base confirmation files folder
     pub static ref CNF_FILES: &'static Path = Path::new(r"\\hssieng\SNData\SimTrans\SAP Data Files");
@@ -45,11 +47,13 @@ pub trait CnfFilePaths {
 
 impl CnfFilePaths for PathBuf {
     fn new_prod_file() -> Self {
-        CNF_FILES.join( chrono::Local::now().format("Production_%Y%m%d%H%M%S.ready").to_string() )
+        // CNF_FILES.join( chrono::Local::now().format("Production_%Y%m%d%H%M%S.ready").to_string() )
+        CNF_FILES.join( timestamped_file("Production", "ready") )
     }
 
     fn new_issue_file() -> Self {
-        CNF_FILES.join( chrono::Local::now().format("Issue_%Y%m%d%H%M%S.ready").to_string() )
+        // CNF_FILES.join( chrono::Local::now().format("Issue_%Y%m%d%H%M%S.ready").to_string() )
+        CNF_FILES.join( timestamped_file("Issue", "ready") )
     }
     
     fn archive_file(self: &Self) -> Self {
