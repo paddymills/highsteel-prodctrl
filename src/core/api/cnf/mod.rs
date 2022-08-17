@@ -2,6 +2,10 @@
 // TODO: migrate use of part/matl data to separate structs and flatten with serde
 //  current cannot do with csv crate: https://github.com/BurntSushi/rust-csv/issues/98
 
+// TODO: refactor use of String to Box<str> in fixed length strings (wbs, plant, etc)
+//  saves 8 bytes of memory since length and capacity do not need to be tracked
+//  see: https://mahdi.blog/rust-box-str-vs-string/
+
 mod cnf_row;
 pub use cnf_row::CnfFileRow;
 
