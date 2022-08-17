@@ -70,6 +70,8 @@ optional = true
 
 [dev-dependencies]
 figment = { version = "0.10", features = ["env", "test", "toml"] }
+
+[target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
 
 [[bin]]
