@@ -199,3 +199,20 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn machines_regex() {
+        assert!(MACHINES.is_match("GEMINI_TABLE-A"));
+        assert_eq!(false, MACHINES.is_match("geminitest"));
+        assert!(MACHINES.is_match("for_titan"));
+        assert_eq!(false, MACHINES.is_match("an_img"));
+        assert!(MACHINES.is_match("mg-test"));
+        assert!(MACHINES.is_match("for_mg"));
+        assert!(MACHINES.is_match("farley-a"));
+    }
+}
+
