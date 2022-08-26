@@ -12,7 +12,6 @@ use super::{keys, super::prelude::*};
 pub trait BomDbOps<T>
     where T: From<Row>
 {
-
     /// Builds a list of [`Parts`] from the database for a given [`JobShipment`]
     /// 
     /// [`Parts`]: crate::Part
