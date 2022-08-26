@@ -3,6 +3,9 @@
 
 pub mod keys;
 
+mod cnf;
+pub use cnf::SnCnfDbOps;
+
 mod jobship;
 pub use jobship::*;
 

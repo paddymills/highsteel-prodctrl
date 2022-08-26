@@ -2,7 +2,6 @@
 use regex::{Regex, RegexSetBuilder, RegexSet};
 
 use crate::Plant;
-
 use super::CnfFileRow;
 use super::cnf_serde::three_digit_f64;
 
@@ -11,6 +10,8 @@ lazy_static! {
     static ref OLD_WBS: Regex = Regex::new(r"S-(\d{7})-2-(\d{2})").expect("Failed to build OLD_WBS Regex");
     // HD wbs element
     static ref HD_WBS: Regex = Regex::new(r"D-(\d{7})-\d{5}").expect("Failed to build HD_WBS Regex");
+    // old, non-hd, wbs element
+    static ref CC_WBS: Regex = Regex::new(r"S-.*-2-(2\d{3})").expect("Failed to build CC_WBS Regex");
 
     // Production job number match
     static ref PROD_JOB: Regex = Regex::new(r"S-\d{7}").expect("Failed to build JOB_PART Regex");
@@ -186,10 +187,14 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
                 None => IssueCode::CostCenterFromStock
             };
 
-            // infer cost center and G/L account
-            // TODO: fetch cost center from database
-            let user1 = "20xx".into();
+            // infer cost center
+            let cc = match CC_WBS.captures(&row.part_wbs) {
+                Some(cap) => cap.get(1).map_or("20xx", |m| m.as_str()),
+                None => "20xx",
+            };
+            let user1 = cc.into();
 
+            // infer G/L account
             let user2 = match MACHINES.is_match(&row.mark) {
                 true  => "634124".into(),   // machine parts
                 false => "637118".into()    // all others
