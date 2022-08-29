@@ -105,6 +105,12 @@ impl ProdFileProcessor {
         // check if file is empty
         if is_empty_file(filepath) {
             info!("Skipping empty file {:?}", filepath);
+
+            // TODO: refactor (same code as after processing)
+            let backup = filepath.backup_file();
+            fs::copy(filepath, backup).expect("failed to backup file");
+            fs::remove_file(filepath).expect("failed to remove original file");
+
             return Ok(())
         }
 
