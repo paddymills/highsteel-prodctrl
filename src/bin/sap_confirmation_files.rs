@@ -28,7 +28,7 @@ async fn main() -> Result<(), prodctrl::Error> {
     WriteLogger::init(
         args.verbose.log_level_filter(),
         Config::default(),
-        File::create(log_file).expect("failed to create log")
+        File::create(&log_file).expect("failed to create log")
     ).expect("Failed to init logger");
 
     debug!("{:?}", args);
@@ -37,8 +37,8 @@ async fn main() -> Result<(), prodctrl::Error> {
     processor.process_files()?;
 
     // remove log file if nothing logged
-    if is_empty_file(log_file) {
-        let _ = fs::remove_file(log_file);
+    if is_empty_file(&log_file) {
+        let _ = std::fs::remove_file(&log_file);
     }
     
     Ok(())
