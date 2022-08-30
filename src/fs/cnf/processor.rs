@@ -68,26 +68,28 @@ impl ProdFileProcessor {
     /// [`CNF_FILES`]: `static@super::paths::CNF_FILES`
     pub fn process_files(&self) -> Result<(), Error> {
         let files = get_ready_files()?;
-        let progress = Mutex::new( Progress::new() );
-        
-        let bar = {
-            let mut prog = progress.lock().unwrap();
-            let bar = prog.bar(files.len(), "Reading files");
-            prog.draw(&bar);
 
-            bar
-        };
-
-
-        files.into_par_iter().for_each(|file| {
-            match self.process_file(&file) {
-                Ok(_) => (),
-                Err(e) => error!("Failed to parse file: {:?}", e)
-            }
-
-            progress.lock().unwrap().inc_and_draw(&bar, 1);
-        });
-
+        if files.len() > 0 {
+            let progress = Mutex::new( Progress::new() );
+            
+            let bar = {
+                let mut prog = progress.lock().unwrap();
+                let bar = prog.bar(files.len(), "Reading files");
+                prog.draw(&bar);
+    
+                bar
+            };
+    
+    
+            files.into_par_iter().for_each(|file| {
+                match self.process_file(&file) {
+                    Ok(_) => (),
+                    Err(e) => error!("Failed to parse file: {:?}", e)
+                }
+    
+                progress.lock().unwrap().inc_and_draw(&bar, 1);
+            });
+        }
 
         Ok(())
     }
