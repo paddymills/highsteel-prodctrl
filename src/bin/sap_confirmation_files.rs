@@ -19,8 +19,7 @@ struct Args {
     dry_run: bool
 }
 
-#[tokio::main]
-async fn main() -> Result<(), prodctrl::Error> {
+fn main() -> Result<(), prodctrl::Error> {
     let args = Args::parse();
 
     let log_file = timestamped_file("log/cnf", "log");
@@ -38,7 +37,7 @@ async fn main() -> Result<(), prodctrl::Error> {
 
     // remove log file if nothing logged
     if is_empty_file(&log_file) {
-        let _ = std::fs::remove_file(&log_file);
+        std::fs::remove_file(&log_file)?;
     }
     
     Ok(())

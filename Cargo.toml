@@ -76,7 +76,6 @@ winres = "0.1"
 
 [[bin]]
 name = "sap_confirmation_files"
-required-features = [ "db" ]
 
 [[bin]]
 name = "pc"
