@@ -1,13 +1,19 @@
 
+
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
+#[macro_use] extern crate serde;
+
+pub mod api;
+pub mod paths;
+pub mod processor;
 
 use clap::Parser;
 use simplelog::{Config, WriteLogger};
 use std::fs::File;
-use prodctrl::fs::{
-    cnf::ProdFileProcessor,
-    timestamped_file, is_empty_file
-};
+use prodctrl::fs::{timestamped_file, is_empty_file};
+
+use processor::ProdFileProcessor;
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about = "Confirmation files for SAP processing")]

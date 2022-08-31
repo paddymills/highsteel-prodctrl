@@ -1,11 +1,9 @@
 
-use crate::Plant;
+use prodctrl::Plant;
 
 use super::cnf_serde::three_digit_f64;
 
-/// Confirmation file row ([SAP Confirmation Files])
-/// 
-/// [SAP Confirmation Files]: crate::fs::cnf
+/// Confirmation file row (SAP Confirmation Files)
 /// 
 /// tab delimited row in the format
 /// ```tsv

@@ -76,16 +76,9 @@ winres = "0.1"
 
 [[bin]]
 name = "sap_confirmation_files"
+path = "bin/cnf/src/main.rs"
 
 [[bin]]
 name = "pc"
-path = "src\\bin\\cli.rs"
+path = "bin/pc/src/main.rs"
 required-features = [ "db" ]
-
-[[example]]
-name = "compare"
-required-features = ["db"]
-
-[[example]]
-name = "lb"
-required-features = ["db"]
