@@ -216,7 +216,7 @@ mod tests {
             part_qty: 5u64,
             part_uom: "EA".into(),
             
-            matl: "50/50W-0008".into(),
+            matl: "50W-0008".into(),
             matl_wbs: None,
             matl_qty: 1_001.569f64,
             matl_uom: "IN2".into(),
@@ -239,13 +239,49 @@ mod tests {
     }
 
     #[test]
-    fn test_infer() {
+    fn infer_job_shipment() {
         let row = get_test_row();
-        let (c, u1, u2) = infer_codes(&row);
+        let (_, u1, u2) = infer_codes(&row);
 
-        assert_eq!(c, IssueCode::ProjectFromStock);
         assert_eq!(&u1, "D-1210123");
         assert_eq!(&u2, "10");
+    }
+
+    #[test]
+    fn infer_project_from_stock() {
+        let row = get_test_row();
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::ProjectFromStock);
+    }
+
+    #[test]
+    fn infer_project_from_project() {
+        let mut row = get_test_row();
+        row.matl_wbs = Some("D-1210123-10004".into());
+
+        let (c, ..) = infer_codes(&row);
+        assert_eq!(c, IssueCode::ProjectFromProject);
+    }
+
+    #[test]
+    fn infer_project_from_other_project() {
+        let mut row = get_test_row();
+        row.matl_wbs = Some("D-1200248-10004".into());
+
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::ProjectFromOtherProject);
+    }
+
+    #[test]
+    fn infer_cost_center_stock() {
+        let mut row = get_test_row();
+        row.job = "D-HSU".into();
+
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::CostCenterFromStock);
     }
 }
 
