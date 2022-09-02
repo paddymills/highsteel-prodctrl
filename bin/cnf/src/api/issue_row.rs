@@ -207,6 +207,26 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
 mod tests {
     use super::*;
 
+    fn get_test_row() -> CnfFileRow {
+        CnfFileRow {
+            mark: "1210123A-X1A".into(),
+            job: "S-1210123".into(),
+            part_wbs: "S-1210123-2-10".into(),
+            part_loc: "PROD".into(),
+            part_qty: 5u64,
+            part_uom: "EA".into(),
+            
+            matl: "50/50W-0008".into(),
+            matl_wbs: None,
+            matl_qty: 1_001.569f64,
+            matl_uom: "IN2".into(),
+            matl_loc: Some("K2".into()),
+
+            plant: Plant::Lancaster,
+            program: "54091".into()
+        }
+    }
+
     #[test]
     fn machines_regex() {
         assert!(MACHINES.is_match("GEMINI_TABLE-A"));
@@ -216,6 +236,16 @@ mod tests {
         assert!(MACHINES.is_match("mg-test"));
         assert!(MACHINES.is_match("for_mg"));
         assert!(MACHINES.is_match("farley-a"));
+    }
+
+    #[test]
+    fn test_infer() {
+        let row = get_test_row();
+        let (c, u1, u2) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::ProjectFromStock);
+        assert_eq!(&u1, "D-1210123");
+        assert_eq!(&u2, "10");
     }
 }
 
