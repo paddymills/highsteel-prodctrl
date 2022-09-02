@@ -99,6 +99,7 @@ impl CnfFilePaths for PathBuf {
     }
 }
 
+#[cfg(target_os = "windows")]
 #[cfg(test)]
 mod tests {
     use super::*;
