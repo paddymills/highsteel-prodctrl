@@ -207,6 +207,26 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
 mod tests {
     use super::*;
 
+    fn get_test_row() -> CnfFileRow {
+        CnfFileRow {
+            mark: "1210123A-X1A".into(),
+            job: "S-1210123".into(),
+            part_wbs: "S-1210123-2-10".into(),
+            part_loc: "PROD".into(),
+            part_qty: 5u64,
+            part_uom: "EA".into(),
+            
+            matl: "50W-0008".into(),
+            matl_wbs: None,
+            matl_qty: 1_001.569f64,
+            matl_uom: "IN2".into(),
+            matl_loc: Some("K2".into()),
+
+            plant: Plant::Lancaster,
+            program: "54091".into()
+        }
+    }
+
     #[test]
     fn machines_regex() {
         assert!(MACHINES.is_match("GEMINI_TABLE-A"));
@@ -216,6 +236,63 @@ mod tests {
         assert!(MACHINES.is_match("mg-test"));
         assert!(MACHINES.is_match("for_mg"));
         assert!(MACHINES.is_match("farley-a"));
+    }
+
+    #[test]
+    fn infer_job_shipment() {
+        let row = get_test_row();
+        let (_, u1, u2) = infer_codes(&row);
+
+        assert_eq!(&u1, "D-1210123");
+        assert_eq!(&u2, "10");
+    }
+
+    #[test]
+    fn infer_project_from_stock() {
+        let row = get_test_row();
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::ProjectFromStock);
+    }
+
+    #[test]
+    fn infer_project_from_project() {
+        let mut row = get_test_row();
+        row.matl_wbs = Some("D-1210123-10004".into());
+
+        let (c, ..) = infer_codes(&row);
+        assert_eq!(c, IssueCode::ProjectFromProject);
+    }
+
+    #[test]
+    fn infer_project_from_other_project() {
+        let mut row = get_test_row();
+        row.matl_wbs = Some("D-1200248-10004".into());
+
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::ProjectFromOtherProject);
+    }
+
+    #[test]
+    fn infer_cost_center_stock() {
+        let mut row = get_test_row();
+        row.job = "D-HSU".into();
+
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::CostCenterFromStock);
+    }
+
+    #[test]
+    fn infer_cost_center_project() {
+        let mut row = get_test_row();
+        row.job = "D-HSU".into();
+        row.matl_wbs = Some("D-1200248-10004".into());
+
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::CostCenterFromProject);
     }
 }
 
