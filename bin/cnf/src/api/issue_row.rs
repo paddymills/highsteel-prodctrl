@@ -283,5 +283,16 @@ mod tests {
 
         assert_eq!(c, IssueCode::CostCenterFromStock);
     }
+
+    #[test]
+    fn infer_cost_center_project() {
+        let mut row = get_test_row();
+        row.job = "D-HSU".into();
+        row.matl_wbs = Some("D-1200248-10004".into());
+
+        let (c, ..) = infer_codes(&row);
+
+        assert_eq!(c, IssueCode::CostCenterFromProject);
+    }
 }
 
