@@ -1,4 +1,6 @@
 
+// TODO: move to bin
+
 // TODO: migrate use of part/matl data to separate structs and flatten with serde
 //  current cannot do with csv crate: https://github.com/BurntSushi/rust-csv/issues/98
 

@@ -1,0 +1,14 @@
+[package]
+name = "prodctrl-bin"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prodctrl-core = { path = "../../lib/core" }
+prodctrl-db = { path = "../../lib/db" }
+
+# cli/tui
+clap = { version = "3.2", features = ["derive"] }
+clap-verbosity-flag = "1.0.1"

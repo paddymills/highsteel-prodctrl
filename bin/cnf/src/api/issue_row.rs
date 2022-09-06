@@ -1,7 +1,7 @@
 
 use regex::{Regex, RegexSetBuilder, RegexSet};
 
-use crate::Plant;
+use prodctrl::Plant;
 use super::CnfFileRow;
 use super::cnf_serde::three_digit_f64;
 
@@ -32,9 +32,7 @@ lazy_static! {
     };
 }
 
-/// Issue file row ([SAP Confirmation Files])
-/// 
-/// [SAP Confirmation Files]: crate::fs::cnf
+/// Issue file row (SAP Confirmation Files)
 /// 
 /// ### Text format
 /// tab delimited row in the format:

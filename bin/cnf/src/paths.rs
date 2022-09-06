@@ -6,7 +6,7 @@ use regex::Regex;
 use std::io::Error;
 use std::path::{Path, PathBuf};
 
-use crate::fs::timestamped_file;
+use prodctrl::fs::timestamped_file;
 
 lazy_static! {
     /// Base confirmation files folder

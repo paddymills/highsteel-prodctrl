@@ -1,8 +1,6 @@
 
 //! filesystem modules
 
-pub mod cnf;
-
 use std::path::Path;
 
 /// Check if file is is am empty text file.
