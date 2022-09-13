@@ -136,70 +136,73 @@ impl Into<IssueFileRow> for CnfFileRow {
 }
 
 fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
-    match PROD_JOB.is_match(&row.job) {
-        // Part name has a job number prefix -> project stock issuing
-        true => {
-            // infer job and shipment from part WBS element
-            let (user1, user2) = match OLD_WBS.captures(&row.part_wbs) {
-                Some(caps) => (
-                    format!("D-{}", caps.get(1).unwrap().as_str()),
-                    caps.get(2).unwrap().as_str().into()
-                ),
-                None => {
-                    if let Some(caps) = HD_WBS.captures(&row.part_wbs) {
-                        // TODO: fetch shipment from database
-                        (
-                            format!("D-{}", caps.get(1).unwrap().as_str()),
-                            "01".into()
-                        )
-                    } else {
-                        error!("failed to parse Part WBS Element: {}", &row.part_wbs);
-        
-                        panic!("failed to parse Part WBS Element")
-                    }
+    // part WBS ends in cost center -> cost center issuing
+    if let Some(caps) = CC_WBS.captures(&row.part_wbs) {
+        let code = match &row.matl_wbs {
+            Some(_) => IssueCode::CostCenterFromProject,
+            None => IssueCode::CostCenterFromStock
+        };
+    
+        // cost center
+        let user1 = caps
+            .get(1)
+            .map_or("20xx", |m| m.as_str());
+    
+        // infer G/L account
+        let user2 = infer_gl_acct(&row.mark);
 
+        return (code, user1.into(), user2)
+    }
+
+    // project stock issuing
+    if PROD_JOB.is_match(&row.job) {
+        // infer job and shipment from part WBS element
+        let (user1, user2) = match OLD_WBS.captures(&row.part_wbs) {
+            Some(caps) => (
+                format!("D-{}", caps.get(1).unwrap().as_str()),
+                caps.get(2).unwrap().as_str().into()
+            ),
+            None => {
+                if let Some(caps) = HD_WBS.captures(&row.part_wbs) {
+                    // TODO: fetch shipment from database
+                    (
+                        format!("D-{}", caps.get(1).unwrap().as_str()),
+                        "01".into()
+                    )
+                } else {
+                    error!("failed to parse Part WBS Element: {}", &row.part_wbs);
+                    panic!("failed to parse Part WBS Element")
                 }
-            };
+            }
+        };
 
-            let code = match &row.matl_wbs {
-                // project stock material
-                Some(wbs) => {
-                    // part and material have the same project
-                    if wbs.starts_with(&user1) { IssueCode::ProjectFromProject }
+        let code = match &row.matl_wbs {
+            // project stock material
+            Some(wbs) => {
+                // part and material have the same project
+                if wbs.starts_with(&user1) { IssueCode::ProjectFromProject }
 
-                    // part and material have different projects
-                    else { IssueCode::ProjectFromOtherProject }
-                },
+                // part and material have different projects
+                else { IssueCode::ProjectFromOtherProject }
+            },
 
-                // plant stock material
-                None => IssueCode::ProjectFromStock
-            };
+            // plant stock material
+            None => IssueCode::ProjectFromStock
+        };
 
-            (code, user1, user2)
-        },
+        return (code, user1, user2)
+    }
 
-        // Part name does not have a job number prefix -> cost center issuing
-        false => {
-            let code = match &row.matl_wbs {
-                Some(_) => IssueCode::CostCenterFromProject,
-                None => IssueCode::CostCenterFromStock
-            };
+    // unmatched data
+    error!("unmatched data when converting to issuing row");
+    panic!("cnf -> issue conversion failed");
+    // TODO: default result
+}
 
-            // infer cost center
-            let cc = match CC_WBS.captures(&row.part_wbs) {
-                Some(cap) => cap.get(1).map_or("20xx", |m| m.as_str()),
-                None => "20xx",
-            };
-            let user1 = cc.into();
-
-            // infer G/L account
-            let user2 = match MACHINES.is_match(&row.mark) {
-                true  => "634124".into(),   // machine parts
-                false => "637118".into()    // all others
-            };
-
-            (code, user1, user2)
-        }
+fn infer_gl_acct(mark: &String) -> String {
+    match MACHINES.is_match(mark) {
+        true  => "634124".into(),   // machine parts
+        false => "637118".into()    // all others
     }
 }
 
@@ -277,7 +280,8 @@ mod tests {
     #[test]
     fn infer_cost_center_stock() {
         let mut row = get_test_row();
-        row.job = "D-HSU".into();
+        // row.job = "D-HSU".into();
+        row.part_wbs = "S-HSU-2-2062".into();
 
         let (c, ..) = infer_codes(&row);
 
@@ -287,12 +291,22 @@ mod tests {
     #[test]
     fn infer_cost_center_project() {
         let mut row = get_test_row();
-        row.job = "D-HSU".into();
+        // row.job = "D-HSU".into();
+        row.part_wbs = "S-HSU-2-2062".into();
         row.matl_wbs = Some("D-1200248-10004".into());
 
         let (c, ..) = infer_codes(&row);
 
         assert_eq!(c, IssueCode::CostCenterFromProject);
+    }
+
+    #[test]
+    #[should_panic]
+    fn infer_fallout() {
+        let mut row = get_test_row();
+        row.job = "D-HSU".into();
+
+        let _ = infer_codes(&row);
     }
 }
 
