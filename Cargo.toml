@@ -23,7 +23,6 @@ mssql = [ "bb8", "bb8-tiberius", "tiberius" ]
 [dependencies]
 chrono = "0.4"
 csv = "1.1"
-figment = { version = "0.10", features = ["env", "toml"] }
 glob = "0.3"
 lazy_static = "1.4"
 rayon = "1.5"
@@ -82,3 +81,7 @@ path = "bin/cnf/src/main.rs"
 name = "pc"
 path = "bin/pc/src/main.rs"
 required-features = [ "db" ]
+
+[[bin]]
+name = "test"
+path = "bin/test/src/main.rs"

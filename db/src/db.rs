@@ -1,4 +1,17 @@
 
+/// Hss database configurations
+/// 
+/// allows for easy
+/// - deserialization from config
+/// - conversion into database config
+pub enum HssDatabase {
+    /// Bom database
+    Bom,
+    /// Sigmanest database
+    Sigmanest
+}
+
+
 /// Database connection
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Database {

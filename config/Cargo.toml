@@ -1,0 +1,13 @@
+[package]
+name = "prodctrl-config"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prodctrl = { version = "0.1.0", path = "../" }
+prodctrl-db = { version = "0.1.0", path = "../db" }
+rust-embed = { version = "6.4.1", features = ["debug-embed", "include-exclude"] }
+serde = { version = "1.0.144", features = ["derive"] }
+toml = "0.5.9"
