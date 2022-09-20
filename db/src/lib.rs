@@ -19,9 +19,6 @@ pub use conn::*;
 mod config;
 pub use config::*;
 
-/// Global access to database pools
-pub mod pools;
-
 /// Common db types and utils
 pub mod prelude {
     use bb8::Pool;
