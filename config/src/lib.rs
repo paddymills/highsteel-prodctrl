@@ -3,7 +3,7 @@
 extern crate serde;
 
 mod db;
-use db::Databases;
+pub use db::Databases;
 
 use rust_embed::RustEmbed;
 
