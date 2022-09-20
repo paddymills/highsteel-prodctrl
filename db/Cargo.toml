@@ -5,3 +5,28 @@ edition = "2021"
 
 
 [dependencies]
+
+serde = { version = "1.0", features = ["derive"] }
+
+# async
+async_once = "0.2"
+async-trait = "0.1"
+# crossbeam = "0.8"
+
+# MSSQL database
+bb8 = "0.8"
+# see tokio-util dependency note below before upgrading bb8-tiberius version
+bb8-tiberius = "0.12.0"
+
+[dependencies.tiberius]
+version = "0.10"
+features = [ "sql-browser-tokio", "integrated-auth-gssapi" ]
+
+[dependencies.tokio]
+version = "1.19"
+features = ["net", "rt-multi-thread", "sync"]
+
+[dependencies.tokio-util]
+# tokio-util version must match version used in bb8-tiberius for type compatibility
+version = "0.6.2"
+features = [ "compat" ]

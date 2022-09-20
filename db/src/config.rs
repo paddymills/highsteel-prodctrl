@@ -2,7 +2,7 @@
 use bb8_tiberius::IntoConfig;
 use tiberius::{AuthMethod, Config, error::Error};
 
-use crate::config::CONFIG;
+use prodctrl::config::Databases;
 use super::prelude::*;
 
 // TODO: move config to each database module
@@ -53,13 +53,14 @@ impl IntoConfig for HssDatabase {
         config.authentication(AuthMethod::Integrated);
         config.trust_cert();
 
+        let cfg = Databases::from_embed();
         match self {
             HssDatabase::Bom => {
-                config.host(&CONFIG.bom.server_name());
+                config.host(&cfg.bom.server);
             },
             HssDatabase::Sigmanest => {
-                config.host(&CONFIG.sigmanest.server_name());
-                config.database(&CONFIG.sigmanest.database.as_ref().unwrap());
+                config.host(&cfg.sigmanest.server);
+                config.database(&cfg.sigmanest.database.as_ref().unwrap());
             }
         }
 

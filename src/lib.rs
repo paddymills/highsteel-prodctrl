@@ -30,11 +30,14 @@
 #[allow(unused_imports)]
 #[macro_use] extern crate log;
 
-mod core;
-pub use crate::core::*; // must use crate::core to resolve ambiguity
+
+pub use prodctrl_config as config;
 
 #[cfg(feature="db")]
-pub mod db;
+pub use prodctrl_db as db;
+
+mod core;
+pub use crate::core::*; // must use crate::core to resolve ambiguity
 
 pub mod fs;
 pub mod ui;
