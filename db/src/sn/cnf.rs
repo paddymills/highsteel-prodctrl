@@ -1,5 +1,5 @@
 
-use super::super::prelude::*;
+use crate::prelude::*;
 
 
 /// Trait to add confirmation file db operations to database Client

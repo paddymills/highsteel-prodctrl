@@ -9,7 +9,7 @@ pub use cnf::SnCnfDbOps;
 mod jobship;
 pub use jobship::*;
 
-use super::prelude::*;
+use crate::prelude::{DbPool, DbClient};
 /// Builds a ['bb8::Pool`] for the Sigmanest database
 /// 
 /// ['bb8::Pool`]: https://docs.rs/bb8/latest/bb8/struct.Pool.html

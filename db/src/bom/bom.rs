@@ -4,7 +4,8 @@ use tiberius::Row;
 use crate::{Commodity, Grade, Material, Part};
 use crate::JobShipment;
 
-use super::{keys, super::prelude::*};
+use super::keys;
+use crate::prelude::*;
 
 
 /// Trait to add Bom db operations to database Client
