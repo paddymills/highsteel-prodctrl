@@ -27,7 +27,7 @@ const DELIM: u8 = b'\t';
 // lazy static globals that are non-const
 lazy_static! {
     // not in SAP to match against material master
-    static ref NOT_IN_SAP: Regex = Regex::new(r"^NO[\d\s\w]+SAP$").expect("failed to build regex");
+    static ref NOT_IN_SAP: Regex = Regex::new(r"^NO[\d\s\w]*SAP$").expect("failed to build regex");
 
     // for WBS Element validation
     static ref VALID_WBS:  Regex = Regex::new(r"D-\d{7}-\d{5}").expect("failed to build regex");
@@ -139,6 +139,12 @@ impl ProdFileProcessor {
                 // filter out items based on material location
                 if SKIP_LOCS[..].contains(&record.matl_loc.as_deref()) {
                     debug!("Skipping due to location: {:?}", &record.matl_loc);
+                    continue;
+                }
+
+                // filter out items not in sap
+                if NOT_IN_SAP.is_match(&record.matl.as_deref()) {
+                    debug!("Skipping due to SAP MM: {:?}", &record.matl);
                     continue;
                 }
     
