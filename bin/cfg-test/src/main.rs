@@ -1,7 +1,7 @@
 // use prodctrl::config as prodctrl_config;
 
 fn main() {
-    let cfg = prodctrl::config::Databases::from_embed();
+    let cfg = prodctrl::config::DbConfig::from_embed();
 
     println!("{:#?}", cfg);
 }
