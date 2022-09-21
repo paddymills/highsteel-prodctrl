@@ -5,7 +5,7 @@ use tiberius::Client;
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
-pub use super::prelude::*;
+pub use crate::prelude::*;
 
 /// Builds a connection pool for a database
 pub async fn build_db_pool(name: &str, config: impl IntoConfig, size: u32) -> DbPool {
