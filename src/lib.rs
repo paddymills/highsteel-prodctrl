@@ -21,9 +21,6 @@
 //! [tokio docs]: https://docs.rs/tokio/latest/tokio/
 //! 
 
-#[cfg(feature = "async")]
-#[macro_use] extern crate async_trait;
-
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate serde;
 
