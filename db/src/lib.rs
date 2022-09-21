@@ -21,6 +21,9 @@ pub mod prelude {
     use bb8::Pool;
     use bb8_tiberius::ConnectionManager;
 
+    /// Tiberius Error
+    pub type SqlError = tiberius::error::Error;
+
     /// Convenience export of database Pool type
     pub type DbPool = Pool<ConnectionManager>;
 

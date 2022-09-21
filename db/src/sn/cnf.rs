@@ -6,12 +6,12 @@ use super::super::prelude::*;
 #[async_trait]
 pub trait SnCnfDbOps {
     /// Gets the cost center for a given program and piece mark
-    async fn get_cc(&mut self, program: &String, mark: &String) -> Result<Option<String>, crate::Error>;
+    async fn get_cc(&mut self, program: &String, mark: &String) -> Result<Option<String>, SqlError>;
 }
 
 #[async_trait]
 impl SnCnfDbOps for DbClient {
-    async fn get_cc(&mut self, program: &String, mark: &String) -> Result<Option<String>, crate::Error> {
+    async fn get_cc(&mut self, program: &String, mark: &String) -> Result<Option<String>, SqlError> {
 		let sn_mark = mark.replacen("-", "_", 1);
 
         let res = self

@@ -17,7 +17,7 @@ pub trait BomDbOps<T>
     /// [`Parts`]: crate::Part
     /// [`JobShipment`]: crate::JobShipment
     // TODO: refactor job and shipment to a JobShipment
-    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, crate::Error>;
+    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, SqlError>;
 
     /// Gets all parts and their quantities or a given [`JobShipment`]
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T>;
@@ -27,7 +27,7 @@ pub trait BomDbOps<T>
 impl<T> BomDbOps<T> for DbClient
     where T: From<Row>
 {
-    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, crate::Error> {
+    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, SqlError> {
         let res = self
             .query(
                 "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
