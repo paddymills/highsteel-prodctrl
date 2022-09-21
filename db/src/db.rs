@@ -66,7 +66,12 @@ impl IntoConfig for HssDatabase {
         config.trust_cert();
 
         let cfg = self.get_config();
-        config.host(&cfg.server_name());
+        config.host(&cfg.server);
+
+        if let Some(inst) = cfg.instance {
+            config.instance_name(inst);
+        }
+
         match self {
             HssDatabase::Sigmanest => {
                 config.database(&cfg.database.as_ref().unwrap());

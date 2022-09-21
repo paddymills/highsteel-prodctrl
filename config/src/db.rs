@@ -62,23 +62,4 @@ impl DbConnParams {
             ..Default::default()
         }
     }
-
-    /// builds server name, concatenating the instance is given
-    /// 
-    /// ```
-    /// use prodctrl::config::Database;
-    /// 
-    /// let mut db = Database::new("servername", None);
-    /// 
-    /// assert_eq!(db.server_name(), "servername".to_string());
-    /// 
-    /// db.instance = Some("test_instance".into());
-    /// assert_eq!(db.server_name(), "servername\\test_instance".to_string());
-    /// ```
-    pub fn server_name(&self) -> String {
-        match &self.instance {
-            Some(instance) => format!("{}\\{}", self.server, instance),
-            None => self.server.clone()
-        }
-    }
 }
