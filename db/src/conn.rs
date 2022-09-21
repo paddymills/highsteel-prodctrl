@@ -7,18 +7,18 @@ use tokio_util::compat::TokioAsyncWriteCompatExt;
 
 pub use crate::prelude::*;
 
+// TODO: add name to debug
+
 /// Builds a connection pool for a database
 pub async fn build_db_pool(config: impl IntoConfig, size: u32) -> DbPool {
-    let name = config.get_addr();
-
-    debug!("** init {} db pool", name);
+    debug!("** init db pool");
 
     let mgr = match ConnectionManager::build(config) {
         Ok(conn_mgr) => conn_mgr,
         Err(_) => panic!("ConnectionManager failed to connect to database")
     };
     
-    debug!("** > {} db connection Manager built", name);
+    debug!("** > db connection Manager built");
 
     let pool = match Pool::builder()
         .max_size(size)
@@ -28,16 +28,14 @@ pub async fn build_db_pool(config: impl IntoConfig, size: u32) -> DbPool {
             Err(_) => panic!("Bom Pool failed to build")
         };
     
-    debug!("** > {} db pool built", name);
+    debug!("** > db pool built");
 
     pool
 }
 
 /// Builds a single database connection
 pub async fn build_db_conn(config: impl IntoConfig) -> DbClient {
-    let name = config.get_addr();
-
-    debug!("** > building {} db connection", name);
+    debug!("** > building db connection");
 
     let cfg = config.into_config().expect("Failed to convert config");
 
