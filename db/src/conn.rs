@@ -8,7 +8,9 @@ use tokio_util::compat::TokioAsyncWriteCompatExt;
 pub use crate::prelude::*;
 
 /// Builds a connection pool for a database
-pub async fn build_db_pool(name: &str, config: impl IntoConfig, size: u32) -> DbPool {
+pub async fn build_db_pool(config: impl IntoConfig, size: u32) -> DbPool {
+    let name = config.get_addr();
+
     debug!("** init {} db pool", name);
 
     let mgr = match ConnectionManager::build(config) {
@@ -32,7 +34,9 @@ pub async fn build_db_pool(name: &str, config: impl IntoConfig, size: u32) -> Db
 }
 
 /// Builds a single database connection
-pub async fn build_db_conn(name: &str, config: impl IntoConfig) -> DbClient {
+pub async fn build_db_conn(config: impl IntoConfig) -> DbClient {
+    let name = config.get_addr();
+
     debug!("** > building {} db connection", name);
 
     let cfg = config.into_config().expect("Failed to convert config");

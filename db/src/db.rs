@@ -32,21 +32,14 @@ impl HssDatabase {
 
     /// Builds a pool of a given size
     pub async fn build_pool_sized(self, size: u32) -> DbPool {
-        super::build_db_pool(self.get_name(), self, size).await
+        super::build_db_pool(self, size).await
     }
 
     /// Connects to Sigmanest database and returns a [`tiberius::Client`]
     /// 
     /// [`tiberius::Client`]: https://docs.rs/tiberius/latest/tiberius/struct.Client.html
     pub async fn connect(self) -> DbClient {
-        super::build_db_conn(self.get_name(), self).await
-    }
-
-    fn get_name(&self) -> &str {
-        match self {
-            Self::Bom => "Bom",
-            Self::Sigmanest => "Sigmanest",
-        }
+        super::build_db_conn(self).await
     }
 
     fn get_config(&self) -> DbConnParams {
