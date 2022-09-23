@@ -143,7 +143,7 @@ impl ProdFileProcessor {
                 }
 
                 // filter out items not in sap
-                if NOT_IN_SAP.is_match(&record.matl.as_deref()) {
+                if NOT_IN_SAP.is_match(&record.matl) {
                     debug!("Skipping due to SAP MM: {:?}", &record.matl);
                     continue;
                 }
