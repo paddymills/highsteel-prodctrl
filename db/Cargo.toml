@@ -1,11 +1,16 @@
 [package]
 name = "prodctrl-db"
-version = "0.1.0"
-edition = "2021"
+description = "production control database connectors"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
-prodctrl-config = { version = "0.1.0", path = "../config" }
-serde = { version = "1.0", features = ["derive"] }
+prodctrl-api = { workspace = true, features = ["db_compat"] }
+prodctrl-config.workspace = true
+serde.workspace = true
 log = "0.4.17"
 
 # async

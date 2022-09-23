@@ -2,35 +2,52 @@
 
 [package]
 name = "prodctrl"
-version = "0.1.0"
-authors = [ "Patrick Miller" ]
-edition = "2021"
 description = "Production control automation"
+default-run = "pc"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[workspace.package]
+authors = [ "Patrick Miller" ]
+version = "0.1.0"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/paddymills/highsteel-prodctrl"
-default-run = "pc"
 
 [workspace]
-members = ["config", "db"]
+members = [ "api", "config", "db" ]
+
+[workspace.dependencies]
+prodctrl-api = { path = "api/" }
+prodctrl-config = { path = "config/" }
+prodctrl-db = { path = "db/" }
+
+serde = { version = "1.0", features = ["derive"] }
+lazy_static = "1.4"
+regex = "1.5"
 
 [features]
-default = []
+default = [ "api", "config" ]
 full = [ "db", "gui", "xl" ]
+api = [ "prodctrl-api" ]
+config = [ "prodctrl-config" ]
 db = [ "prodctrl-db" ]
 gui = []
 xl = [ "simple_excel_writer" ]
 
+
 [dependencies]
-prodctrl-config = { path = "config/" }
-prodctrl-db = { path = "db/", optional = true }
+prodctrl-api = { workspace = true, optional = true }
+prodctrl-config = { workspace = true, optional = true }
+prodctrl-db = { workspace = true, optional = true }
 
 chrono = "0.4"
 csv = "1.1"
 glob = "0.3"
-lazy_static = "1.4"
 rayon = "1.5"
-regex = "1.5"
-serde = { version = "1.0", features = ["derive"] }
 
 # logging
 log = "0.4"

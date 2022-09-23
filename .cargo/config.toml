@@ -1,5 +1,6 @@
 [alias]
 docs = "doc --all-features --no-deps"
+build-win = "build --all-features --target x86_64-pc-windows-gnu"
 
 [build]
 rustflags = ["--cfg", "tokio_unstable"]
