@@ -9,3 +9,6 @@ pub use material::Material;
 
 mod part;
 pub use part::Part;
+
+#[cfg(feature="db_compat")]
+pub mod dbcompat;

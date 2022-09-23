@@ -21,9 +21,6 @@
 //! [tokio docs]: https://docs.rs/tokio/latest/tokio/
 //! 
 
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate serde;
-
 #[allow(unused_imports)]
 #[macro_use] extern crate log;
 
@@ -33,8 +30,13 @@ pub use prodctrl_config as config;
 #[cfg(feature="db")]
 pub use prodctrl_db as db;
 
-mod core;
-pub use crate::core::*; // must use crate::core to resolve ambiguity
+#[cfg(feature="api")]
+pub use prodctrl_api::*;
+
+// TODO: paths module
+// TODO: regex module
+
+pub mod logging;
 
 pub mod fs;
 pub mod ui;

@@ -1,6 +1,9 @@
 
 //! Core HSS/PC api
 
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate serde;
+
 mod grade;
 pub use grade::Grade;
 
