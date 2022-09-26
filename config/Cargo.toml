@@ -9,5 +9,5 @@ repository.workspace = true
 
 [dependencies]
 rust-embed = { version = "6.4.1", features = ["debug-embed", "include-exclude"] }
-serde.workspace = true
+serde = { workspace = true }
 toml = "0.5.9"

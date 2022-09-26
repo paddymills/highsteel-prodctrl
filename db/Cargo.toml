@@ -9,8 +9,8 @@ repository.workspace = true
 
 [dependencies]
 prodctrl-api = { workspace = true, features = ["db_compat"] }
-prodctrl-config.workspace = true
-serde.workspace = true
+prodctrl-config = { workspace = true }
+serde = { workspace = true }
 log = "0.4.17"
 
 # async
