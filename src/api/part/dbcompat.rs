@@ -1,6 +1,8 @@
 
 use tiberius::Row;
 
+use super::{Part, Material, Commodity, Grade};
+
 impl From<Row> for Part {
     fn from(row: Row) -> Self {
         Self::from(&row)

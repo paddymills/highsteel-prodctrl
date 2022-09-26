@@ -1,10 +1,5 @@
 
-#![warn(missing_docs)]
-
 //! Embedded configuration files
-
-#[macro_use]
-extern crate serde;
 
 mod db;
 pub use db::{DbConfig, DbConnParams};

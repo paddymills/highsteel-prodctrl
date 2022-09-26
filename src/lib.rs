@@ -12,6 +12,7 @@
 //! where the features are not needed. No features are enabled by default.
 //! 
 //! - `full`: Enables all features
+//! - `config`: Enables embedded config files
 //! - `db`: Enables database integration (along with async and mssql dependencies)
 //! - `gui`: Enables graphical interfaces
 //! - `xl`: Enables excel data contectors
@@ -21,17 +22,20 @@
 //! [tokio docs]: https://docs.rs/tokio/latest/tokio/
 //! 
 
-#[allow(unused_imports)]
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
+#[macro_use] extern crate serde;
 
+#[cfg(feature="async")]
+#[macro_use] extern crate async_trait;
 
-pub use prodctrl_config as config;
+pub use api::*;
+
+#[cfg(feature="config")]
+pub mod config;
 
 #[cfg(feature="db")]
-pub use prodctrl_db as db;
-
-#[cfg(feature="api")]
-pub use prodctrl_api::*;
+pub mod db;
 
 // TODO: paths module
 // TODO: regex module

@@ -10,5 +10,6 @@ pub use material::Material;
 mod part;
 pub use part::Part;
 
-#[cfg(feature="db_compat")]
-pub mod dbcompat;
+// TODO: import this into each module (i.e. Part)
+#[cfg(feature="db")]
+pub(crate) mod dbcompat;

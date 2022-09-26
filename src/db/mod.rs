@@ -1,11 +1,5 @@
 
-#![warn(missing_docs)]
-
 //! database connections, deserializating and schema
-
-#[macro_use] extern crate async_trait;
-#[macro_use] extern crate log;
-#[macro_use] extern crate serde;
 
 mod db;
 pub use db::*;

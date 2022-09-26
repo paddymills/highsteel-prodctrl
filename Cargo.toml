@@ -4,54 +4,51 @@
 name = "prodctrl"
 description = "Production control automation"
 default-run = "pc"
-authors.workspace = true
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-
-[workspace.package]
 authors = [ "Patrick Miller" ]
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/paddymills/highsteel-prodctrl"
 
-[workspace]
-members = [ "api", "config", "db" ]
-
-[workspace.dependencies]
-prodctrl-api = { path = "api/" }
-prodctrl-config = { path = "config/" }
-prodctrl-db = { path = "db/" }
-
-serde = { version = "1.0", features = ["derive"] }
-lazy_static = "1.4"
-regex = "1.5"
-
 [features]
-default = [ "api", "config" ]
-full = [ "db", "gui", "xl" ]
-api = [ "prodctrl-api" ]
-config = [ "prodctrl-config" ]
-db = [ "prodctrl-db" ]
+default = [ "config" ]
+full = [ "config", "db", "gui", "xl" ]
+async = [ "async-trait", "tokio", "tokio-util" ]
+config = []
+db = [ "async", "mssql" ]
 gui = []
+mssql = [ "bb8", "bb8-tiberius", "tiberius" ]
 xl = [ "simple_excel_writer" ]
 
 
 [dependencies]
-prodctrl-api = { workspace = true, optional = true }
-prodctrl-config = { workspace = true, optional = true }
-prodctrl-db = { workspace = true, optional = true }
-
 chrono = "0.4"
 csv = "1.1"
 glob = "0.3"
+lazy_static = "1.4"
 rayon = "1.5"
+regex = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+
+# config
+rust-embed = { version = "6.4.1", features = ["debug-embed", "include-exclude"] }
+toml = "0.5.9"
 
 # logging
 log = "0.4"
 simplelog = "0.12"
+
+# async
+async-trait = { version = "0.1", optional = true }
+tokio = { version = "1.19", features = ["net", "rt-multi-thread", "sync"], optional = true }
+# tokio-util version must match version used in bb8-tiberius for type compatibility
+tokio-util = { version = "0.6.2", features = [ "compat" ], optional = true }
+
+# MSSQL database
+bb8 = { version = "0.8", optional = true }
+# see tokio-util dependency note below before upgrading bb8-tiberius version
+bb8-tiberius = { version = "0.12.0", optional = true }
+tiberius = { version = "0.10", features = [ "sql-browser-tokio", "integrated-auth-gssapi" ], optional = true }
 
 # cli/tui
 # TODO: simplify progress (linya, nutmeg, pbr)
