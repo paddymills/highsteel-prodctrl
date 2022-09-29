@@ -59,4 +59,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub mod prelude {
     pub use super::Error;
     pub use super::Result;
+
+    #[cfg(feature="db")]
+    pub use crate::db::prelude::*;
 }
