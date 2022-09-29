@@ -1,5 +1,5 @@
 
-use crate::ConfigAssets;
+use super::ConfigAssets;
 
 /// Parent config node
 #[derive(Debug, Default, Deserialize, Serialize)]
