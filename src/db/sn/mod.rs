@@ -1,13 +1,12 @@
 
 //! Sigmanest database
 
+pub(crate) mod api_compat;
+
 pub mod keys;
 
 mod cnf;
 pub use cnf::SnCnfDbOps;
-
-mod jobship;
-pub use jobship::*;
 
 use crate::prelude::{DbPool, DbClient};
 /// Builds a ['bb8::Pool`] for the Sigmanest database

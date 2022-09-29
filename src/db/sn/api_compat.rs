@@ -1,6 +1,6 @@
 
 use tiberius::Row;
-use prodctrl_api::JobShipment;
+use crate::api::JobShipment;
 
 impl From<&Row> for JobShipment {
     fn from(row: &Row) -> Self {
