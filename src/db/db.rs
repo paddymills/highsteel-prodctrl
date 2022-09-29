@@ -2,7 +2,7 @@
 use bb8_tiberius::IntoConfig;
 use tiberius::{AuthMethod, Config, error::Error};
 
-use prodctrl_config::{DbConfig, DbConnParams};
+use crate::config::{DbConfig, DbConnParams};
 use super::prelude::*;
 
 /// Hss database configurations
