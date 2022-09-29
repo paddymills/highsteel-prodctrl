@@ -5,7 +5,7 @@ use tiberius::Client;
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
-pub use crate::prelude::*;
+pub use super::prelude::*;
 
 // TODO: add name to debug
 
