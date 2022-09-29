@@ -2,7 +2,7 @@
 use tiberius::Row;
 
 use crate::{Commodity, Grade, Material, Part};
-use crate::JobShipment;
+use super::keys;
 
 impl From<Row> for Part {
     fn from(row: Row) -> Self {
