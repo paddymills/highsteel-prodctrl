@@ -29,6 +29,7 @@
 #[cfg(feature="async")]
 #[macro_use] extern crate async_trait;
 
+mod api;
 pub use api::*;
 
 #[cfg(feature="config")]
