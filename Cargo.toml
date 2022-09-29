@@ -73,7 +73,3 @@ path = "bin/cnf/src/main.rs"
 name = "pc"
 path = "bin/pc/src/main.rs"
 required-features = [ "db" ]
-
-[[bin]]
-name = "cfg"
-path = "bin/cfg-test/src/main.rs"
