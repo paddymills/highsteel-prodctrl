@@ -1,7 +1,8 @@
 
 use tiberius::Row;
 
-use super::{Part, Material, Commodity, Grade};
+use crate::{Commodity, Grade, Material, Part};
+use crate::JobShipment;
 
 impl From<Row> for Part {
     fn from(row: Row) -> Self {

@@ -1,6 +1,8 @@
 
 //! Bom database
 
+pub(crate) mod api_compat;
+
 mod bom;
 // TODO: explicit exports
 pub use bom::*;

@@ -1,10 +1,7 @@
 
 use tiberius::Row;
 
-// TODO: figure out how to reuse main api
-//          ? move to api crate ?
-use prodctrl_api::{Commodity, Grade, Material, Part};
-use prodctrl_api::JobShipment;
+use super::api_compat::*;
 
 use super::keys;
 use crate::prelude::*;
