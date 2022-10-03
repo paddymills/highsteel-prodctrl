@@ -19,6 +19,12 @@ pub trait BomDbOps<T>
     // TODO: refactor job and shipment to a JobShipment
     async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>>;
 
+    /// Gets a list of all structures and associated structure ID's
+    async fn get_jobs(&mut self) -> Result<Vec<T>>;
+
+    /// Gets a list of all shipments and their ID's, given a Structure ID
+    async fn get_shipments(&mut self, struct_id: &str) -> Result<Vec<T>>;
+
     /// Gets all parts and their quantities or a given [`JobShipment`]
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T>;
 }
@@ -43,6 +49,39 @@ impl<T> BomDbOps<T> for DbClient
         Ok(res)
     }
 
+    // TODO: test deser type
+    async fn get_jobs(&mut self) -> Result<Vec<T>> {
+        let res = self
+            .simple_query(
+                "EXEC BOM.SAP.GetEngStructures"
+            )
+            .await?
+            .into_first_result()
+            .await?
+            .into_iter()
+            .map( |row| T::from(row) )
+            .collect();
+    
+        Ok(res)
+    }
+
+    // TODO: test deser type
+    async fn get_shipments(&mut self, struct_id: &str) -> Result<Vec<T>> {
+        let res = self
+            .query(
+                "EXEC BBOM.SAP.GetEngShipments @StructID",
+                &[&struct_id]
+            )
+            .await?
+            .into_first_result()
+            .await?
+            .into_iter()
+            .map( |row| T::from(row) )
+            .collect();
+    
+        Ok(res)
+    }
+    
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T> {
         debug!("** > Db called parts_qty *********************");
         self
