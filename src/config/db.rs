@@ -16,14 +16,19 @@ pub struct DbConfig {
 pub struct DbConnParams {
     /// Server name
     pub server: String,
+
     /// Server instance, if applicable
     pub instance: Option<String>,
+    
     /// Database name (optional)
     pub database: Option<String>,
+    
     /// User (optional)
     pub user: Option<String>,
+    
     /// Password (if applicable)
     pub password: Option<String>,
+    
     /// Default pool size
     pub pool_size: Option<u32>,
 }
@@ -43,13 +48,14 @@ impl DbConfig {
     }
 
     /// generates a toml file for embedding at build time
-    // TODO: move this to build script
     pub fn generate() {
-		let cfg = Self::default();
-		let cfg_toml = toml::to_string(&cfg)
+		// TODO: default with filled in optional fields with "<optional>"
+		let cfg_toml = toml::to_string_pretty(&Self::default())
 			.expect("failed to serialize config");
 		std::fs::write("assets/db.toml", cfg_toml)
 			.expect("failed to write config data to file");
+
+        println!("Database config has been generated. Correct data and build crate.")
 	}
 }
 
