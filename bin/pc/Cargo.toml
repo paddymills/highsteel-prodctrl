@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-prodctrl-core = { path = "../../lib/core" }
-prodctrl-db = { path = "../../lib/db" }
+prodctrl = { version = "0.1.0", path = "../" }
+prodctrl-config = { version = "0.1.0", path = "../config/" }
+prodctrl-db = { version = "0.1.0", path = "../db/" }
 
 # cli/tui
 clap = { version = "3.2", features = ["derive"] }

@@ -12,6 +12,7 @@
 //! where the features are not needed. No features are enabled by default.
 //! 
 //! - `full`: Enables all features
+//! - `config`: Enables embedded config files
 //! - `db`: Enables database integration (along with async and mssql dependencies)
 //! - `gui`: Enables graphical interfaces
 //! - `xl`: Enables excel data contectors
@@ -21,20 +22,27 @@
 //! [tokio docs]: https://docs.rs/tokio/latest/tokio/
 //! 
 
-#[cfg(feature = "async")]
-#[macro_use] extern crate async_trait;
-
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 #[macro_use] extern crate serde;
 
-mod core;
-pub use crate::core::*; // must use crate::core to resolve ambiguity
+#[cfg(feature="async")]
+#[macro_use] extern crate async_trait;
+
+mod api;
+pub use api::*;
+
+#[cfg(feature="config")]
+pub mod config;
 
 #[cfg(feature="db")]
 pub mod db;
 
-pub mod config;
+// TODO: paths module
+// TODO: regex module
+
+pub mod logging;
+
 pub mod fs;
 pub mod ui;
 
@@ -51,4 +59,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub mod prelude {
     pub use super::Error;
     pub use super::Result;
+
+    #[cfg(feature="db")]
+    pub use crate::db::prelude::*;
 }

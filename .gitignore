@@ -2,7 +2,3 @@
 /Cargo.lock
 
 assets/*.toml
-log/
-test/
-
-*.log

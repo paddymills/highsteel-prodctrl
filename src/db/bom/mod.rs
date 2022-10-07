@@ -1,6 +1,7 @@
 
-
 //! Bom database
+
+pub(crate) mod api_compat;
 
 mod bom;
 // TODO: explicit exports
@@ -8,7 +9,7 @@ pub use bom::*;
 
 pub mod keys;
 
-use super::prelude::*;
+use super::prelude::{DbPool, DbClient};
 /// Builds a ['bb8::Pool`] for the Bom database
 /// 
 /// ['bb8::Pool`]: https://docs.rs/bb8/latest/bb8/struct.Pool.html

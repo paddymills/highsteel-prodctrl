@@ -1,10 +1,10 @@
 
 use tiberius::Row;
 
-use crate::{Commodity, Grade, Material, Part};
 use crate::JobShipment;
 
-use super::{keys, super::prelude::*};
+use super::keys;
+use crate::prelude::*;
 
 
 /// Trait to add Bom db operations to database Client
@@ -17,7 +17,13 @@ pub trait BomDbOps<T>
     /// [`Parts`]: crate::Part
     /// [`JobShipment`]: crate::JobShipment
     // TODO: refactor job and shipment to a JobShipment
-    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, crate::Error>;
+    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>>;
+
+    /// Gets a list of all structures and associated structure ID's
+    async fn get_jobs(&mut self) -> Result<Vec<T>>;
+
+    /// Gets a list of all shipments and their ID's, given a Structure ID
+    async fn get_shipments(&mut self, struct_id: &str) -> Result<Vec<T>>;
 
     /// Gets all parts and their quantities or a given [`JobShipment`]
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T>;
@@ -27,7 +33,7 @@ pub trait BomDbOps<T>
 impl<T> BomDbOps<T> for DbClient
     where T: From<Row>
 {
-    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>, crate::Error> {
+    async fn init_bom(&mut self, job: &str, shipment: i32) -> Result<Vec<T>> {
         let res = self
             .query(
                 "EXEC BOM.SAP.GetBOMData @Job=@P1, @Ship=@P2",
@@ -43,6 +49,39 @@ impl<T> BomDbOps<T> for DbClient
         Ok(res)
     }
 
+    // TODO: test deser type
+    async fn get_jobs(&mut self) -> Result<Vec<T>> {
+        let res = self
+            .simple_query(
+                "EXEC BOM.SAP.GetEngStructures"
+            )
+            .await?
+            .into_first_result()
+            .await?
+            .into_iter()
+            .map( |row| T::from(row) )
+            .collect();
+    
+        Ok(res)
+    }
+
+    // TODO: test deser type
+    async fn get_shipments(&mut self, struct_id: &str) -> Result<Vec<T>> {
+        let res = self
+            .query(
+                "EXEC BBOM.SAP.GetEngShipments @StructID",
+                &[&struct_id]
+            )
+            .await?
+            .into_first_result()
+            .await?
+            .into_iter()
+            .map( |row| T::from(row) )
+            .collect();
+    
+        Ok(res)
+    }
+    
     async fn parts_qty(&mut self, js: &JobShipment) -> Vec<T> {
         debug!("** > Db called parts_qty *********************");
         self
@@ -67,70 +106,5 @@ impl<T> BomDbOps<T> for DbClient
             .map(|row| T::from(row))
 
             .collect()
-    }
-}
-
-impl From<Row> for Part {
-    fn from(row: Row) -> Self {
-        Self::from(&row)
-    }
-}
-
-impl From<&Row> for Part {
-    fn from(row: &Row) -> Self {
-        Self {
-            mark: row.get::<&str, _>(keys::MARK).unwrap_or_default().into(),
-            qty:  row.get::<i32, _>(keys::QTY).unwrap_or_default(),
-
-            dwg:  row.get::<&str, _>(keys::DWG).map(Into::into),
-            desc: row.get::<&str, _>(keys::DESC).map(Into::into),
-            matl: Material::from(row),
-
-            remark: row.get::<&str, _>(keys::REMARK).map(Into::into),
-
-            ..Default::default()
-        }
-    }
-}
-
-impl From<&Row> for Material {
-    fn from(row: &Row) -> Self {
-        let len = row.get::<f32, _>(keys::LEN).unwrap_or_default();
-        let grade = Grade::from(row);
-
-        let comm = match row.get::<&str, _>(keys::COMM).unwrap_or_default() {
-            "PL" => Commodity::Plate {
-                thk: row.get::<f32, _>(keys::THK).unwrap_or_default(),
-                wid: row.get::<f32, _>(keys::WID).unwrap_or_default()
-            },
-            
-            "L" | "HSS" => Commodity::Shape {
-                thk: row.get::<f32, _>(keys::ANG_THK).unwrap_or_default(),
-                section: row.get::<&str, _>(keys::DESC).unwrap_or_default().into()
-            },
-
-            "MC" | "C" | "W" | "WT" => Commodity::Shape {
-                // TODO: AISC shape db thickness
-                thk: row.get::<f32, _>(keys::THK).unwrap_or_default(),
-                section: row.get::<&str, _>(keys::DESC).unwrap_or_default().into()
-            },
-            
-            _ => Commodity::Skip(
-                row.get::<&str, _>(keys::DESC).unwrap_or_default().into()
-            )
-        };
-
-        Self { comm, grade, len }
-    }
-}
-
-impl From<&Row> for Grade {
-    fn from(row: &Row) -> Self {
-        Self::new(
-            row.get::<&str, _>(keys::SPEC ).expect("Failed to get spec for Grade"),
-            row.get::<&str, _>(keys::GRADE).expect("Failed to get grade for Grade"),
-            row.get::<&str, _>(keys::TEST ).expect("Failed to get test for Grade"),
-            0
-        )
     }
 }

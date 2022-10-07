@@ -1,14 +1,16 @@
 
-use std::io;
-#[cfg(windows)] use winres::WindowsResource;
+#[cfg(windows)]
+use winres::WindowsResource;
 
-fn main() -> io::Result<()> {
+fn main() -> std::io::Result<()> {
 
     #[cfg(windows)] {
         WindowsResource::new()
             .set_icon("assets/ferris.ico")
             .compile()?;
     }
+
+    println!("cargo:warning=⚙️ Main build script OK");
 
     Ok(())
 }

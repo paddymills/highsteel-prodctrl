@@ -1,13 +1,13 @@
 
-//! config reader
-
-mod config;
-pub use config::*;
+//! Embedded configuration files
 
 mod db;
-pub use db::Database;
+pub use db::{DbConfig, DbConnParams};
 
-lazy_static! {
-    /// lazy evaluated global [`Config`]
-    pub static ref CONFIG: Config = Config::read_config();
-}
+use rust_embed::RustEmbed;
+
+#[derive(RustEmbed)]
+#[folder = "assets/"]
+#[include = "*.toml"]
+/// Embedded config toml files
+struct ConfigAssets;
