@@ -47,10 +47,17 @@ impl DbConfig {
 
     }
 
+    fn sample() -> Self {
+        Self {
+            bom: DbConnParams::sample(),
+            sigmanest: DbConnParams::sample()
+        }
+    }
+
     /// generates a toml file for embedding at build time
     pub fn generate() {
 		// TODO: default with filled in optional fields with "<optional>"
-		let cfg_toml = toml::to_string_pretty(&Self::default())
+		let cfg_toml = toml::to_string_pretty(&Self::sample())
 			.expect("failed to serialize config");
 		std::fs::write("assets/db.toml", cfg_toml)
 			.expect("failed to write config data to file");
@@ -66,6 +73,17 @@ impl DbConnParams {
             server: server.to_string(),
             database: database.map(|s| s.to_string()),
             ..Default::default()
+        }
+    }
+
+    fn sample() -> Self {
+        Self {
+            server: "server".into(),
+            instance: Some("<optional>".into()),
+            database: Some("<optional>".into()),
+            user: Some("<optional>".into()),
+            password: Some("<optional>".into()),
+            pool_size: Some(8),
         }
     }
 }
