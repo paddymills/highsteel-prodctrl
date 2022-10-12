@@ -67,9 +67,12 @@ winres = "0.1"
 
 [[bin]]
 name = "sap_confirmation_files"
-path = "bin/cnf/src/main.rs"
+path = "src/bin/cnf/main.rs"
 
 [[bin]]
 name = "pc"
-path = "bin/pc/src/main.rs"
+required-features = [ "db" ]
+
+[[bin]]
+name = "workorder"
 required-features = [ "db" ]

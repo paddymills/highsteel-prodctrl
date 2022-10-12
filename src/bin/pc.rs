@@ -3,14 +3,18 @@
 
 use clap::{Parser, Subcommand};
 use simplelog::{Config, SimpleLogger};
+use std::path::PathBuf;
+
 use prodctrl::prelude::*;
 
 // TODO: completions https://docs.rs/clap_complete/latest/clap_complete/index.html
+
+/// Production Control management system
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
-#[clap(propagate_version = true)]
+#[clap(name = "Production Control")]
+#[clap(author, version)]
 struct Cli {
-    /// Subcommand to run
+    /// subcommand to run
     #[clap(subcommand)]
     command: Commands,
 
@@ -26,6 +30,14 @@ enum Commands {
         /// generate config files
         #[clap(short, long)]
         generate: bool
+    },
+
+    /// push files to client machines
+    Push {
+        files: Vec<PathBuf>,
+
+        #[clap(short, long)]
+        all: Option<bool>
     }
 }
 
