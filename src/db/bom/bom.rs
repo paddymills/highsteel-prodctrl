@@ -69,7 +69,7 @@ impl<T> BomDbOps<T> for DbClient
     async fn get_shipments(&mut self, struct_id: &str) -> Result<Vec<T>> {
         let res = self
             .query(
-                "EXEC BBOM.SAP.GetEngShipments @StructID",
+                "EXEC BOM.SAP.GetEngShipments @StructID",
                 &[&struct_id]
             )
             .await?
