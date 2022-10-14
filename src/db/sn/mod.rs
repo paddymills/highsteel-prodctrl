@@ -8,6 +8,8 @@ pub mod keys;
 mod cnf;
 pub use cnf::SnCnfDbOps;
 
+pub mod simtrans;
+
 use crate::prelude::{DbPool, DbClient};
 /// Builds a ['bb8::Pool`] for the Sigmanest database
 /// 
