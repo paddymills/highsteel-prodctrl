@@ -8,6 +8,7 @@ pub mod keys;
 mod cnf;
 pub use cnf::SnCnfDbOps;
 
+/// sim trans (TransAct) table transaction
 pub mod simtrans;
 
 use crate::prelude::{DbPool, DbClient};

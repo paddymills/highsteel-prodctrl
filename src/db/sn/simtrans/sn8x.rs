@@ -16,6 +16,7 @@ use crate::{
 ///     - ItemName(or FileName)
 /// 
 /// Work order transactions
+/// 
 /// |TransType|Description|
 /// |---|---|
 /// |SN80|Add (missing/undefined) part|
@@ -44,9 +45,9 @@ use crate::{
 //      - add/change chargeref
 //      - add/change other data (dwg, ops, etc.)
 pub async fn import_workorder(client: &mut DbClient, parts: Vec<Part>) -> Result<()> {
-    let sn_mark = |mark: String| mark.replacen("-", "_", 1);
+    // let sn_mark = |mark: String| mark.replacen("-", "_", 1);
 
-    for part in parts {
+    for _part in parts {
         client
             .execute(
                 "
