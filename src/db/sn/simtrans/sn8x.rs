@@ -6,16 +6,22 @@ use crate::{
 
 /// SimTrans Transactions
 /// 
-/// [reference](http://hssappserv1:3000/HelpCenter/content/transaction-reference.htm)
-/// [variables](http://hssappserv1:3000/HelpCenter/content/using-simtrans/transaction-variables.htm)
+/// # Variables
+/// 
+/// [SQL reference](http://hssappserv1:3000/HelpCenter/content/using-simtrans/transaction-variables.htm)
 /// 
 /// for work order transactions, you always need
+/// 
 ///     - TransType
 ///     - District
 ///     - OrderNo
 ///     - ItemName(or FileName)
 /// 
-/// Work order transactions
+/// # Transactions
+/// 
+/// [Documentation](http://hssappserv1:3000/HelpCenter/content/transaction-reference.htm)
+/// 
+/// ## Work order transactions
 /// 
 /// |TransType|Description|
 /// |---|---|
