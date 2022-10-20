@@ -15,14 +15,17 @@ use prodctrl::fs::{timestamped_file, is_empty_file};
 
 use processor::ProdFileProcessor;
 
+/// Confirmation files for SAP processing
 #[derive(Debug, Parser)]
-#[clap(author, version, about = "Confirmation files for SAP processing")]
+#[clap(name = "Sap Confirmation Files")]
+#[clap(author, version)]
 struct Args {
+    /// Run without producing output or moving files
+    #[clap(short, long)]
+    dry_run: bool,
+    
     #[clap(flatten)]
-    verbose: clap_verbosity_flag::Verbosity,
-
-    #[clap(short, long, help="Run without producing output or moving files")]
-    dry_run: bool
+    verbose: clap_verbosity_flag::Verbosity
 }
 
 fn main() -> Result<(), prodctrl::Error> {
