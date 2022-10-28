@@ -16,7 +16,8 @@ full = [ "config", "db", "gui", "xl" ]
 async = [ "async-trait", "tokio", "tokio-util" ]
 config = []
 db = [ "async", "mssql" ]
-gui = []
+# gui = [ "eframe", "egui" ]
+gui = [ "eframe", "ico" ]
 mssql = [ "bb8", "bb8-tiberius", "tiberius" ]
 xl = [ "simple_excel_writer" ]
 
@@ -62,6 +63,11 @@ requestty = "0.4"
 # Excel
 simple_excel_writer = { version = "0.2.0", optional = true }
 
+# GUI
+eframe = { version = "0.19", features = [ "dark-light" ], optional = true }
+egui = { version = "0.19", optional = true }
+ico = { version = "0.1.0", optional = true }
+
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
 
@@ -76,3 +82,7 @@ required-features = [ "db" ]
 [[bin]]
 name = "workorder"
 required-features = [ "db" ]
+
+[[bin]]
+name = "extras"
+required-features = [ "gui" ]
