@@ -3,7 +3,7 @@ use csv::{ReaderBuilder, StringRecord, WriterBuilder};
 
 use linya::Progress;
 use rayon::prelude::*;
-use std::sync::Mutex;
+use std::{sync::Mutex, panic::catch_unwind};
 
 use regex::Regex;
 use std::{
@@ -84,9 +84,20 @@ impl ProdFileProcessor {
     
     
             files.into_par_iter().for_each(|file| {
-                match self.process_file(&file) {
-                    Ok(_) => (),
-                    Err(e) => error!("Failed to parse file: {:?}", e)
+                match catch_unwind(|| self.process_file(&file)) {
+                    Ok(res) => match res {
+                        Ok(_) => (),
+                        Err(e) => {
+                            error!("Failed to parse file: {:?}", e);
+        
+                            self.revert_output(&file);
+                        }
+                    },
+
+                    // handle panic
+                    Err(_) => {
+                        self.revert_output(&file)
+                    }
                 }
     
                 progress.lock().unwrap().inc_and_draw(&bar, 1);
@@ -199,5 +210,10 @@ impl ProdFileProcessor {
         }
     
         Ok(())
+    }
+
+    fn revert_output(&self, filepath: &PathBuf) {
+        fs::remove_file(&filepath.production_file()).expect("Failed to remove failed production file");
+        fs::remove_file(&filepath.issue_file()).expect("Failed to remove failed issue file");
     }
 }
