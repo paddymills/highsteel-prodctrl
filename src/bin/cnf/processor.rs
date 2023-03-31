@@ -145,7 +145,7 @@ impl ProdFileProcessor {
             
             for result in results {
                 trace!("{:?}", result);
-                let mut record = result.map_err(|e| error!("Failed to deserialize row: {}", e)).unwrap();
+                let record = result.map_err(|e| error!("Failed to deserialize row: {}", e)).unwrap();
 
                 // filter out items based on material location
                 if SKIP_LOCS[..].contains(&record.matl_loc.as_deref()) {
