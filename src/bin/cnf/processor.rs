@@ -160,10 +160,10 @@ impl ProdFileProcessor {
                 }
     
                 // consume all HS02 material from RAW
-                if record.plant == Plant::Williamsport {
-                    debug!("Williamsport record; changing location to RAW");
-                    record.matl_loc = Some("RAW".into());
-                }
+                // if record.plant == Plant::Williamsport {
+                //     debug!("Williamsport record; changing location to RAW");
+                //     record.matl_loc = Some("RAW".into());
+                // }
     
                 if VALID_WBS.is_match(&record.part_wbs) {
                     debug!("Valid WBS element: {}", &record.part_wbs);
