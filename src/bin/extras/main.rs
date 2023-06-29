@@ -1,13 +1,15 @@
 
 mod app;
+
 mod components;
 
 use std::{
     fs::File,
-    io::Error
+    io::Error as IoError,
+    error::Error
 };
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), Box<dyn Error>> {
     let opts = eframe::NativeOptions {
         decorated: false,
 
@@ -18,16 +20,16 @@ fn main() -> Result<(), Error> {
         ..Default::default()
     };
 
-    eframe::run_native(
-        "prodctrl-extra-sheet",
-        opts,
-        app::ExtrasSheet::new()
-    );
-
-    Ok(())
+    Ok(
+        eframe::run_native(
+            "prodctrl-extra-sheet",
+            opts,
+            app::ExtrasSheet::new()
+        )?
+    )
 }
 
-fn get_icon() -> Result<eframe::IconData, Error> {
+fn get_icon() -> Result<eframe::IconData, IoError> {
     let ico_file = File::open("assets/ferris.ico")?;
     let icons = ico::IconDir::read(ico_file)?;
 
