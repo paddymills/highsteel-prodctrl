@@ -37,6 +37,7 @@ impl eframe::App for ExtrasSheet {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // header
         PcHeader::ui(ctx, frame);
+        
 
         // footer
         egui::TopBottomPanel::bottom("footer")
