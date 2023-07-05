@@ -9,7 +9,7 @@ use super::cnf_serde::three_digit_f64;
 /// ```tsv
 /// {mark}	S-{job}	{part wbs}	{part location: PROD}	{part qty}	{part UoM: EA}	{material master}	{material wbs}	{material qty}	{material UoM: IN2}	{material location}	{plant}	{program}	
 /// ```
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all="PascalCase")]
 pub struct CnfFileRow {
     /// Part mark (piecemark)
