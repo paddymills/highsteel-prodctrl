@@ -9,10 +9,27 @@
 //  see: https://mahdi.blog/rust-box-str-vs-string/
 
 mod cnf_row;
+use std::path::PathBuf;
+
 pub use cnf_row::CnfFileRow;
 
 mod issue_row;
-pub use issue_row::IssueFileRow;
+pub use issue_row::{IssueFileRow, InferCodesError};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CnfLogRecord {
+    pub filename: String,
+    pub record: CnfFileRow
+}
+
+impl CnfLogRecord {
+    pub fn new(record: &CnfFileRow, filename: &PathBuf) -> Self {
+        Self {
+            filename: filename.file_stem().unwrap_or_default().to_str().unwrap().into(),
+            record: record.clone()
+        }
+    }
+}
 
 mod cnf_serde {
     use serde::{self, Serializer};

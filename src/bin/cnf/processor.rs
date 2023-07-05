@@ -3,17 +3,18 @@ use csv::{ReaderBuilder, StringRecord, WriterBuilder};
 
 use linya::Progress;
 use rayon::prelude::*;
-use std::{sync::Mutex, panic::catch_unwind};
+use tokio::sync::mpsc::Sender;
 
 use regex::Regex;
 use std::{
     fs,
-    io::Error,
+    io,
+    error::Error,
     path::PathBuf,
+    sync::Mutex
 };
 
-use crate::api::{CnfFileRow, IssueFileRow};
-use prodctrl::Plant;
+use crate::api::{CnfFileRow, IssueFileRow, CnfLogRecord};
 use crate::paths::*;
 
 use prodctrl::fs::is_empty_file;
@@ -54,21 +55,22 @@ lazy_static! {
 /// Production file processor
 /// 
 /// Holds reader and writer builders
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ProdFileProcessor {
     dry_run: bool,
+    db_queue: Sender<CnfLogRecord>
 }
 
 impl ProdFileProcessor {
     /// Create new reader/writer builders
-    pub fn new(dry_run: bool) -> Self {
-        Self { dry_run }
+    pub fn new(dry_run: bool, sender: Sender<CnfLogRecord>) -> Self {
+        Self { dry_run, db_queue: sender }
     }
 
     /// Process all files in [`CNF_FILES`]
     /// 
     /// [`CNF_FILES`]: `static@super::paths::CNF_FILES`
-    pub fn process_files(&self) -> Result<(), Error> {
+    pub fn process_files(&self) -> Result<(), io::Error> {
         let files = get_ready_files()?;
 
         if files.len() > 0 {
@@ -84,20 +86,10 @@ impl ProdFileProcessor {
     
     
             files.into_par_iter().for_each(|file| {
-                match catch_unwind(|| self.process_file(&file)) {
-                    Ok(res) => match res {
-                        Ok(_) => (),
-                        Err(e) => {
-                            error!("Failed to parse file: {:?}", e);
-        
-                            self.revert_output(&file);
-                        }
-                    },
+                if let Err(e) = self.process_file(&file) {
+                    error!("Failed to parse file: {:?}", e);
 
-                    // handle panic
-                    Err(_) => {
-                        self.revert_output(&file)
-                    }
+                    self.revert_output(&file);
                 }
     
                 progress.lock().unwrap().inc_and_draw(&bar, 1);
@@ -107,7 +99,7 @@ impl ProdFileProcessor {
         Ok(())
     }
 
-    pub fn process_file(&self, filepath: &PathBuf) -> Result<(), Error> {
+    pub fn process_file(&self, filepath: &PathBuf) -> Result<(), Box<dyn Error>> {
         //! Modifications:
         //! - Plant 3 material to RAW
         //! - Skip items for material not in SAP
@@ -168,13 +160,18 @@ impl ProdFileProcessor {
                 if VALID_WBS.is_match(&record.part_wbs) {
                     debug!("Valid WBS element: {}", &record.part_wbs);
 
+                    // log row to db, ignoring failure because this is not mission critical
+                    let _ = self.db_queue.blocking_send(CnfLogRecord::new(&record, filepath));
+
                     // write new file with changes
                     prod_writer.serialize(record)?;
                 } else {
                     debug!("Invalid WBS element: {}", &record.part_wbs);
                     
+                    let issue_record = record.try_into()?;
+
                     // send to issue file;
-                    issue_writer.serialize::<IssueFileRow>(record.into())?;
+                    issue_writer.serialize::<IssueFileRow>(issue_record)?;
                 }
             }
 
