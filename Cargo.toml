@@ -81,7 +81,7 @@ winres = "0.1"
 [[bin]]
 name = "sap_confirmation_files"
 path = "src/bin/cnf/main.rs"
-required-features = [ "db_surreal" ]
+required-features = [ "config", "db_surreal" ]
 
 [[bin]]
 name = "pc"

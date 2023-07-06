@@ -20,6 +20,7 @@ use surrealdb::{
 use tokio::sync::mpsc;
 
 use prodctrl::fs::{timestamped_file, is_empty_file};
+use prodctrl::config::DbConfig;
 
 use processor::ProdFileProcessor;
 
@@ -55,15 +56,9 @@ async fn main() -> Result<(), prodctrl::Error> {
         File::create(&log_file).expect("failed to create log")
     ).expect("Failed to init logger");
 
-    let db = Surreal::new::<Https>("hssl.apmills.xyz").await?;
-    db.signin(
-        auth::Database {
-            namespace: "dev",
-            database: "sap_cnf_files",
-            username: "cnfproc",
-            password: "wallbridge"
-        }
-    ).await?;
+    let config = DbConfig::from_embed().prodctrl;
+    let db = Surreal::new::<Https>(config.server.as_ref()).await?;
+    db.signin( config.surreal_auth() ).await?;
     db
         .use_ns("dev")
         .use_db("sap_cnf_files")

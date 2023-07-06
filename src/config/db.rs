@@ -1,4 +1,6 @@
 
+use surrealdb::opt::auth;
+
 use super::ConfigAssets;
 
 /// Parent config node
@@ -89,5 +91,17 @@ impl DbConnParams {
             password: Some("<optional>".into()),
             pool_size: Some(8),
         }
+    }
+
+    /// generates ['surrealdb::opt::auth::Database`] from database connection parameters
+    /// 
+    /// ['surrealdb::opt::auth::Database`]: https://docs.rs/surrealdb/latest/surrealdb/opt/auth/struct.Database.html
+    pub fn surreal_auth(&self) -> auth::Database {
+        let namespace = &self.instance.as_ref().expect("No namespace (instance) supplied for Surreal database");
+        let database  = &self.database.as_ref().expect("No database supplied for Surreal database");
+        let username  = &self.user.as_ref().expect("No username supplied for Surreal database");
+        let password  = &self.password.as_ref().expect("No password supplied for Surreal database");
+
+        auth::Database { namespace, database, username, password }
     }
 }
