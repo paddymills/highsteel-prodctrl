@@ -9,12 +9,13 @@ pub mod paths;
 pub mod processor;
 
 use clap::Parser;
+use sha2::{Digest, Sha256};
 use simplelog::{Config, WriteLogger};
 use std::fs::File;
 use surrealdb::{
     Surreal,
     engine::remote::http::Https,
-    opt::auth
+    opt::auth, sql::Thing
 };
 use tokio::sync::mpsc;
 
@@ -33,6 +34,12 @@ struct Args {
     
     #[clap(flatten)]
     verbose: clap_verbosity_flag::Verbosity
+}
+
+#[derive(Debug, Deserialize)]
+struct Record {
+    #[allow(dead_code)]
+    id: Thing,
 }
 
 #[tokio::main]
@@ -56,7 +63,11 @@ async fn main() -> Result<(), prodctrl::Error> {
             username: "cnfproc",
             password: "wallbridge"
         }
-    );
+    ).await?;
+    db
+        .use_ns("dev")
+        .use_db("sap_cnf_files")
+        .await?;
 
     let (tx, mut rx) = mpsc::channel(64);
     let handle = std::thread::spawn(move || {
@@ -65,14 +76,23 @@ async fn main() -> Result<(), prodctrl::Error> {
     });
 
     // cache sent rows to db
+    let mut hasher = Sha256::new();
     while let Some(res) = rx.recv().await {
-        println!("Got: {}", res.record.mark);
-        let created = db
-            .create("prod_sent")
-            .content(res)
-            .await?;
+        // create id from (Mark, PartWbs, Program)
+        hasher.update(&res.record.mark);
+        hasher.update(&res.record.part_wbs);
+        hasher.update(&res.record.program);
+        let id = hex::encode( hasher.finalize_reset() );
 
-        dbg!(created);
+        let created: Result<Record, surrealdb::Error> = db
+            .update( ("prod_sent", id) )
+            .content(res)
+            .await;
+
+        match created {
+            Ok(c)  => { dbg!(c); },
+            Err(e) => { error!("{:#?}", e); }
+        }
     }
 
     let _ = handle.join();
