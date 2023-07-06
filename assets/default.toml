@@ -1,0 +1,13 @@
+[bom]
+server = ''
+
+[sigmanest]
+server = ''
+database = ''
+
+[prodctrl]
+server = ''
+instance = ''
+database = ''
+username = ''
+password = ''
