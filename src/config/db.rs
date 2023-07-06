@@ -8,7 +8,10 @@ pub struct DbConfig {
     pub bom: DbConnParams,
 
     /// Sigmanest database configuration
-    pub sigmanest: DbConnParams
+    pub sigmanest: DbConnParams,
+
+    /// ProdCtrl database configuration
+    pub prodctrl: DbConnParams
 }
 
 /// Database connection
@@ -17,7 +20,7 @@ pub struct DbConnParams {
     /// Server name
     pub server: String,
 
-    /// Server instance, if applicable
+    /// Server instance, if applicable (namespace for Surreal databases)
     pub instance: Option<String>,
     
     /// Database name (optional)
@@ -50,7 +53,8 @@ impl DbConfig {
     fn sample() -> Self {
         Self {
             bom: DbConnParams::sample(),
-            sigmanest: DbConnParams::sample()
+            sigmanest: DbConnParams::sample(),
+            prodctrl: DbConnParams::sample()
         }
     }
 
