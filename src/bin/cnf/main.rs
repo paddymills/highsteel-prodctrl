@@ -15,7 +15,7 @@ use std::fs::File;
 use surrealdb::{
     Surreal,
     engine::remote::http::Https,
-    opt::auth, sql::Thing
+    sql::Thing
 };
 use tokio::sync::mpsc;
 
@@ -57,11 +57,12 @@ async fn main() -> Result<(), prodctrl::Error> {
     ).expect("Failed to init logger");
 
     let config = DbConfig::from_embed().prodctrl;
+    trace!("database config: {:?}", config);
     let db = Surreal::new::<Https>(config.server.as_ref()).await?;
     db.signin( config.surreal_auth() ).await?;
     db
-        .use_ns("dev")
-        .use_db("sap_cnf_files")
+        .use_ns(config.instance.unwrap())
+        .use_db(config.database.unwrap())
         .await?;
 
     let (tx, mut rx) = mpsc::channel(64);
@@ -85,8 +86,8 @@ async fn main() -> Result<(), prodctrl::Error> {
             .await;
 
         match created {
-            Ok(c)  => { dbg!(c); },
-            Err(e) => { error!("{:#?}", e); }
+            Ok(c)  => { trace!("{:?}", c); },
+            Err(e) => { error!("{:?}", e); }
         }
     }
 

@@ -29,7 +29,7 @@ pub struct DbConnParams {
     pub database: Option<String>,
     
     /// User (optional)
-    pub user: Option<String>,
+    pub username: Option<String>,
     
     /// Password (if applicable)
     pub password: Option<String>,
@@ -87,7 +87,7 @@ impl DbConnParams {
             server: "server".into(),
             instance: Some("<optional>".into()),
             database: Some("<optional>".into()),
-            user: Some("<optional>".into()),
+            username: Some("<optional>".into()),
             password: Some("<optional>".into()),
             pool_size: Some(8),
         }
@@ -99,7 +99,7 @@ impl DbConnParams {
     pub fn surreal_auth(&self) -> auth::Database {
         let namespace = &self.instance.as_ref().expect("No namespace (instance) supplied for Surreal database");
         let database  = &self.database.as_ref().expect("No database supplied for Surreal database");
-        let username  = &self.user.as_ref().expect("No username supplied for Surreal database");
+        let username  = &self.username.as_ref().expect("No username supplied for Surreal database");
         let password  = &self.password.as_ref().expect("No password supplied for Surreal database");
 
         auth::Database { namespace, database, username, password }
