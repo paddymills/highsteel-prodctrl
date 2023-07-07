@@ -1,4 +1,9 @@
 
+use std::{
+    error::Error,
+    fmt::Display
+};
+
 use regex::{Regex, RegexSetBuilder, RegexSet};
 
 use prodctrl::Plant;
@@ -20,7 +25,7 @@ lazy_static! {
     static ref MACHINES: RegexSet = {
         let names = vec!["gemini", "titan" , "mg", "farley", "ficep"];
 
-        // each name will must be begin and end with '-', '_', or string start/end
+        // each name must be begin and end with '-', '_', or string start/end
         RegexSetBuilder::new(
             names
                 .iter()
@@ -116,12 +121,14 @@ pub enum IssueCode {
     CostCenterFromProject,
 }
 
-impl Into<IssueFileRow> for CnfFileRow {
-    /// Convert a [`CnfFileRow`] into an [`IssueFileRow`]
-    fn into(self) -> IssueFileRow {
-        let (code, user1, user2) = infer_codes(&self);
+impl TryInto<IssueFileRow> for CnfFileRow {
+    type Error = InferCodesError;
 
-        IssueFileRow {
+    /// try to Convert a [`CnfFileRow`] into an [`IssueFileRow`]
+    fn try_into(self) -> Result<IssueFileRow, Self::Error> {
+        let (code, user1, user2) = infer_codes(&self)?;
+
+        Ok(IssueFileRow {
             code, user1, user2,
 
             matl:     self.matl,
@@ -131,11 +138,29 @@ impl Into<IssueFileRow> for CnfFileRow {
             matl_loc: self.matl_loc,
             plant:    self.plant,
             program:  self.program
-        }
+        })
     }
 }
 
-fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
+#[derive(Debug)]
+pub enum InferCodesError {
+    BadWbs(String),
+    Unmatched{ job: String, wbs: String }
+}
+
+impl Display for InferCodesError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::BadWbs(wbs) => write!(f, "failed to parse Part WBS Element: {}", wbs),
+            Self::Unmatched { job, wbs } => write!(f, "Unmatched conversion data: job={}, wbs={}", job, wbs)
+        }
+        
+    }
+}
+
+impl Error for InferCodesError {}
+
+fn infer_codes(row: &CnfFileRow) -> Result<(IssueCode, String, String), InferCodesError> {
     // part WBS ends in cost center -> cost center issuing
     if let Some(caps) = CC_WBS.captures(&row.part_wbs) {
         let code = match &row.matl_wbs {
@@ -151,7 +176,7 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
         // infer G/L account
         let user2 = infer_gl_acct(&row.mark);
 
-        return (code, user1.into(), user2)
+        return Ok((code, user1.into(), user2))
     }
 
     // project stock issuing
@@ -171,7 +196,7 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
                     )
                 } else {
                     error!("failed to parse Part WBS Element: {}", &row.part_wbs);
-                    panic!("failed to parse Part WBS Element")
+                    return Err(InferCodesError::BadWbs(row.part_wbs.clone()))
                 }
             }
         };
@@ -190,13 +215,12 @@ fn infer_codes(row: &CnfFileRow) -> (IssueCode, String, String) {
             None => IssueCode::ProjectFromStock
         };
 
-        return (code, user1, user2)
+        return Ok((code, user1, user2))
     }
 
     // unmatched data
     error!("unmatched data when converting to issuing row");
-    panic!("cnf -> issue conversion failed");
-    // TODO: default result
+    return Err(InferCodesError::Unmatched { job: row.job.clone(), wbs: row.part_wbs.clone() })
 }
 
 fn infer_gl_acct(mark: &String) -> String {
@@ -244,7 +268,7 @@ mod tests {
     #[test]
     fn infer_job_shipment() {
         let row = get_test_row();
-        let (_, u1, u2) = infer_codes(&row);
+        let (_, u1, u2) = infer_codes(&row).unwrap();
 
         assert_eq!(&u1, "D-1210123");
         assert_eq!(&u2, "10");
@@ -253,7 +277,7 @@ mod tests {
     #[test]
     fn infer_project_from_stock() {
         let row = get_test_row();
-        let (c, ..) = infer_codes(&row);
+        let (c, ..) = infer_codes(&row).unwrap();
 
         assert_eq!(c, IssueCode::ProjectFromStock);
     }
@@ -263,7 +287,7 @@ mod tests {
         let mut row = get_test_row();
         row.matl_wbs = Some("D-1210123-10004".into());
 
-        let (c, ..) = infer_codes(&row);
+        let (c, ..) = infer_codes(&row).unwrap();
         assert_eq!(c, IssueCode::ProjectFromProject);
     }
 
@@ -272,7 +296,7 @@ mod tests {
         let mut row = get_test_row();
         row.matl_wbs = Some("D-1200248-10004".into());
 
-        let (c, ..) = infer_codes(&row);
+        let (c, ..) = infer_codes(&row).unwrap();
 
         assert_eq!(c, IssueCode::ProjectFromOtherProject);
     }
@@ -283,7 +307,7 @@ mod tests {
         // row.job = "D-HSU".into();
         row.part_wbs = "S-HSU-2-2062".into();
 
-        let (c, ..) = infer_codes(&row);
+        let (c, ..) = infer_codes(&row).unwrap();
 
         assert_eq!(c, IssueCode::CostCenterFromStock);
     }
@@ -295,7 +319,7 @@ mod tests {
         row.part_wbs = "S-HSU-2-2062".into();
         row.matl_wbs = Some("D-1200248-10004".into());
 
-        let (c, ..) = infer_codes(&row);
+        let (c, ..) = infer_codes(&row).unwrap();
 
         assert_eq!(c, IssueCode::CostCenterFromProject);
     }

@@ -3,17 +3,19 @@ use csv::{ReaderBuilder, StringRecord, WriterBuilder};
 
 use linya::Progress;
 use rayon::prelude::*;
-use std::sync::Mutex;
+use tokio::sync::mpsc::Sender;
 
 use regex::Regex;
+use std::ffi::OsStr;
 use std::{
     fs,
-    io::Error,
+    io,
+    error::Error,
     path::PathBuf,
+    sync::Mutex
 };
 
-use crate::api::{CnfFileRow, IssueFileRow};
-use prodctrl::Plant;
+use crate::api::{CnfFileRow, IssueFileRow, CnfLogRecord};
 use crate::paths::*;
 
 use prodctrl::fs::is_empty_file;
@@ -54,21 +56,22 @@ lazy_static! {
 /// Production file processor
 /// 
 /// Holds reader and writer builders
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ProdFileProcessor {
     dry_run: bool,
+    db_queue: Sender<CnfLogRecord>
 }
 
 impl ProdFileProcessor {
     /// Create new reader/writer builders
-    pub fn new(dry_run: bool) -> Self {
-        Self { dry_run }
+    pub fn new(dry_run: bool, sender: Sender<CnfLogRecord>) -> Self {
+        Self { dry_run, db_queue: sender }
     }
 
     /// Process all files in [`CNF_FILES`]
     /// 
     /// [`CNF_FILES`]: `static@super::paths::CNF_FILES`
-    pub fn process_files(&self) -> Result<(), Error> {
+    pub fn process_files(&self) -> Result<(), io::Error> {
         let files = get_ready_files()?;
 
         if files.len() > 0 {
@@ -84,9 +87,10 @@ impl ProdFileProcessor {
     
     
             files.into_par_iter().for_each(|file| {
-                match self.process_file(&file) {
-                    Ok(_) => (),
-                    Err(e) => error!("Failed to parse file: {:?}", e)
+                if let Err(e) = self.process_file(&file) {
+                    error!("Failed to parse file: {:?}", e);
+
+                    self.revert_output(&file);
                 }
     
                 progress.lock().unwrap().inc_and_draw(&bar, 1);
@@ -96,7 +100,7 @@ impl ProdFileProcessor {
         Ok(())
     }
 
-    pub fn process_file(&self, filepath: &PathBuf) -> Result<(), Error> {
+    pub fn process_file(&self, filepath: &PathBuf) -> Result<(), Box<dyn Error>> {
         //! Modifications:
         //! - Plant 3 material to RAW
         //! - Skip items for material not in SAP
@@ -134,7 +138,7 @@ impl ProdFileProcessor {
             
             for result in results {
                 trace!("{:?}", result);
-                let mut record = result.map_err(|e| error!("Failed to deserialize row: {}", e)).unwrap();
+                let record = result.map_err(|e| error!("Failed to deserialize row: {}", e)).unwrap();
 
                 // filter out items based on material location
                 if SKIP_LOCS[..].contains(&record.matl_loc.as_deref()) {
@@ -149,21 +153,26 @@ impl ProdFileProcessor {
                 }
     
                 // consume all HS02 material from RAW
-                if record.plant == Plant::Williamsport {
-                    debug!("Williamsport record; changing location to RAW");
-                    record.matl_loc = Some("RAW".into());
-                }
+                // if record.plant == Plant::Williamsport {
+                //     debug!("Williamsport record; changing location to RAW");
+                //     record.matl_loc = Some("RAW".into());
+                // }
     
                 if VALID_WBS.is_match(&record.part_wbs) {
                     debug!("Valid WBS element: {}", &record.part_wbs);
+
+                    // log row to db, ignoring failure because this is not mission critical
+                    let _ = self.db_queue.blocking_send(CnfLogRecord::new(&record, filepath));
 
                     // write new file with changes
                     prod_writer.serialize(record)?;
                 } else {
                     debug!("Invalid WBS element: {}", &record.part_wbs);
                     
+                    let issue_record = record.try_into()?;
+
                     // send to issue file;
-                    issue_writer.serialize::<IssueFileRow>(record.into())?;
+                    issue_writer.serialize::<IssueFileRow>(issue_record)?;
                 }
             }
 
@@ -199,5 +208,61 @@ impl ProdFileProcessor {
         }
     
         Ok(())
+    }
+
+    pub fn log_processed(&self, existing_files: Vec<String>) -> Result<(), Box<dyn Error>> {
+        let files = std::fs::read_dir(&*CNF_FILES.join( "processed" ))?
+            .filter_map(|f| f.ok())
+            .filter(|f| {
+                let path = f.path();
+
+                let filename = path.file_name().unwrap_or(OsStr::new("skip file")).to_str().unwrap_or("skip file");     // has extension
+                let filestem = path.file_stem().unwrap_or(OsStr::new("not_a_file")).to_str().unwrap_or("invalid utf8"); // does not have extension
+                
+                PROD_FILE_NAME.is_match(filename) || !existing_files.contains(&filestem.into())
+            })
+            .map(|f| f.path().to_path_buf())
+            .collect::<Vec<PathBuf>>();
+
+        if files.len() > 0 {
+            let progress = Mutex::new( Progress::new() );
+            
+            let bar = {
+                let mut prog = progress.lock().unwrap();
+                let bar = prog.bar(files.len(), "Reading files");
+                prog.draw(&bar);
+    
+                bar
+            };
+    
+    
+            files.into_par_iter().for_each(|file| {
+                let filename = file.file_stem().unwrap_or_default().to_str().unwrap();
+                if let Ok(mut reader) = READY_READER.from_path(&file) {
+                    reader.set_headers( StringRecord::from(HEADERS.to_vec()) );
+                    
+                    reader
+                        .deserialize::<CnfFileRow>()
+                        .filter(|r| r.is_ok())
+                        .map(|r| r.unwrap())
+                        .for_each(|record| {
+                            let _ = self.db_queue.blocking_send(
+                                CnfLogRecord {
+                                    filename: filename.into(),
+                                    record: record.clone()
+                                });
+                        });
+                }
+    
+                progress.lock().unwrap().inc_and_draw(&bar, 1);
+            });
+        }
+
+        Ok(())
+    }
+
+    fn revert_output(&self, filepath: &PathBuf) {
+        fs::remove_file(&filepath.production_file()).expect("Failed to remove failed production file");
+        fs::remove_file(&filepath.issue_file()).expect("Failed to remove failed issue file");
     }
 }

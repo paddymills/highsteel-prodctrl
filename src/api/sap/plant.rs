@@ -1,6 +1,6 @@
 
 /// SAP Plant
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Clone)]
 pub enum Plant {
     /// Lancaster (HS01)
     #[serde(rename = "HS01")]

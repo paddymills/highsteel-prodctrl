@@ -1,5 +1,7 @@
 [alias]
 docs = "doc --all-features --no-deps"
+baf = "build --all-features"
+raf = "run --all-features"
 build-win = "build --all-features --target x86_64-pc-windows-gnu"
 
 [build]

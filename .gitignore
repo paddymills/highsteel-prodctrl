@@ -2,3 +2,5 @@
 Cargo.lock
 
 assets/*.toml
+!assets/default.toml
+/log

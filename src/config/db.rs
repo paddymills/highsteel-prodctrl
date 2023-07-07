@@ -1,4 +1,6 @@
 
+use surrealdb::opt::auth;
+
 use super::ConfigAssets;
 
 /// Parent config node
@@ -8,7 +10,10 @@ pub struct DbConfig {
     pub bom: DbConnParams,
 
     /// Sigmanest database configuration
-    pub sigmanest: DbConnParams
+    pub sigmanest: DbConnParams,
+
+    /// ProdCtrl database configuration
+    pub prodctrl: DbConnParams
 }
 
 /// Database connection
@@ -17,14 +22,14 @@ pub struct DbConnParams {
     /// Server name
     pub server: String,
 
-    /// Server instance, if applicable
+    /// Server instance, if applicable (namespace for Surreal databases)
     pub instance: Option<String>,
     
     /// Database name (optional)
     pub database: Option<String>,
     
     /// User (optional)
-    pub user: Option<String>,
+    pub username: Option<String>,
     
     /// Password (if applicable)
     pub password: Option<String>,
@@ -50,7 +55,8 @@ impl DbConfig {
     fn sample() -> Self {
         Self {
             bom: DbConnParams::sample(),
-            sigmanest: DbConnParams::sample()
+            sigmanest: DbConnParams::sample(),
+            prodctrl: DbConnParams::sample()
         }
     }
 
@@ -81,9 +87,21 @@ impl DbConnParams {
             server: "server".into(),
             instance: Some("<optional>".into()),
             database: Some("<optional>".into()),
-            user: Some("<optional>".into()),
+            username: Some("<optional>".into()),
             password: Some("<optional>".into()),
             pool_size: Some(8),
         }
+    }
+
+    /// generates ['surrealdb::opt::auth::Database`] from database connection parameters
+    /// 
+    /// ['surrealdb::opt::auth::Database`]: https://docs.rs/surrealdb/latest/surrealdb/opt/auth/struct.Database.html
+    pub fn surreal_auth(&self) -> auth::Database {
+        let namespace = &self.instance.as_ref().expect("No namespace (instance) supplied for Surreal database");
+        let database  = &self.database.as_ref().expect("No database supplied for Surreal database");
+        let username  = &self.username.as_ref().expect("No username supplied for Surreal database");
+        let password  = &self.password.as_ref().expect("No password supplied for Surreal database");
+
+        auth::Database { namespace, database, username, password }
     }
 }

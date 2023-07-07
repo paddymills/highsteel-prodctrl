@@ -30,7 +30,7 @@ impl FromStr for JobShipment {
             Some(cap) => {
                 Ok(
                     Self {
-                        job: cap.get(1).unwrap().as_str().into(),
+                        job: cap.get(1).unwrap().as_str().to_uppercase().into(),
                         ship: cap.get(2).unwrap().as_str().into(),
                     }
                 )
@@ -38,7 +38,7 @@ impl FromStr for JobShipment {
             None => {
                 eprintln!("Failed to parse job-shipment: {}", s);
 
-                // TODO: custom error
+                // TODO: don't panic (custom error?)
                 panic!("invalid job-shipment")
             }
         }
