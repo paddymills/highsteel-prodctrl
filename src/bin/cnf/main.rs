@@ -63,22 +63,15 @@ async fn main() -> Result<(), prodctrl::Error> {
     let config = DbConfig::from_embed().prodctrl;
     trace!("database config: {:?}", config);
     let db = Surreal::new::<Https>(config.server.as_ref()).await?;
-    // db.signin( config.surreal_auth() ).await?;
-    // db
-    //     .use_ns(config.instance.unwrap())
-    //     .use_db(config.database.unwrap())
-    //     .await?;
+    db.signin( config.surreal_auth() ).await?;
+    db
+        .use_ns(config.instance.unwrap())
+        .use_db(config.database.unwrap())
+        .await?;
 
     let (tx, mut rx) = mpsc::channel(64);
     if args.upload_processed {
-        let db = Surreal::new::<Ws>(config.server.as_ref()).await?;
-        db.signin( config.surreal_auth() ).await?;
-        db
-            .use_ns(config.instance.unwrap())
-            .use_db(config.database.unwrap())
-            .await?;
-
-        trace!("getting processed files");
+        debug!("getting processed filenames from database");
         let mut result = db
             .query("SELECT * FROM array::distinct((SELECT VALUE filename FROM prod_sent))")
             .await?;
