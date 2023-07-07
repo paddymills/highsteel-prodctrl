@@ -12,9 +12,10 @@ use clap::Parser;
 use sha2::{Digest, Sha256};
 use simplelog::{Config, WriteLogger};
 use std::fs::File;
+use std::thread;
 use surrealdb::{
     Surreal,
-    engine::remote::http::Https,
+    engine::remote::{http::Https, ws::Ws},
     sql::Thing
 };
 use tokio::sync::mpsc;
@@ -33,6 +34,9 @@ struct Args {
     #[clap(short, long)]
     dry_run: bool,
     
+    #[clap(short, long)]
+    upload_processed: bool,
+
     #[clap(flatten)]
     verbose: clap_verbosity_flag::Verbosity
 }
@@ -59,17 +63,40 @@ async fn main() -> Result<(), prodctrl::Error> {
     let config = DbConfig::from_embed().prodctrl;
     trace!("database config: {:?}", config);
     let db = Surreal::new::<Https>(config.server.as_ref()).await?;
-    db.signin( config.surreal_auth() ).await?;
-    db
-        .use_ns(config.instance.unwrap())
-        .use_db(config.database.unwrap())
-        .await?;
+    // db.signin( config.surreal_auth() ).await?;
+    // db
+    //     .use_ns(config.instance.unwrap())
+    //     .use_db(config.database.unwrap())
+    //     .await?;
 
     let (tx, mut rx) = mpsc::channel(64);
-    let handle = std::thread::spawn(move || {
-        ProdFileProcessor::new(args.dry_run, tx)
-            .process_files().unwrap();
-    });
+    if args.upload_processed {
+        let db = Surreal::new::<Ws>(config.server.as_ref()).await?;
+        db.signin( config.surreal_auth() ).await?;
+        db
+            .use_ns(config.instance.unwrap())
+            .use_db(config.database.unwrap())
+            .await?;
+
+        trace!("getting processed files");
+        let mut result = db
+            .query("SELECT * FROM array::distinct((SELECT VALUE filename FROM prod_sent))")
+            .await?;
+        
+        let processed_files: Vec<String> = result.take(0)?;
+
+        thread::spawn(move || 
+            ProdFileProcessor::new(args.dry_run, tx)
+                .log_processed(processed_files).unwrap()
+        );
+    }
+    
+    else {
+        thread::spawn(move || 
+            ProdFileProcessor::new(args.dry_run, tx)
+                .process_files().unwrap()
+        );
+    }
 
     // cache sent rows to db
     let mut hasher = Sha256::new();
@@ -90,8 +117,6 @@ async fn main() -> Result<(), prodctrl::Error> {
             Err(e) => { error!("{:?}", e); }
         }
     }
-
-    let _ = handle.join();
 
     // remove log file if nothing logged
     if is_empty_file(&log_file) {
