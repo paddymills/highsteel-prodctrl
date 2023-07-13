@@ -35,7 +35,7 @@ pub use api::*;
 #[cfg(feature="config")]
 pub mod config;
 
-#[cfg(feature="db")]
+#[cfg(all(feature="db", target_os="windows"))]
 pub mod db;
 
 // TODO: paths module
@@ -60,6 +60,6 @@ pub mod prelude {
     pub use super::Error;
     pub use super::Result;
 
-    #[cfg(feature="db")]
+    #[cfg(all(feature="db", target_os="windows"))]
     pub use crate::db::prelude::*;
 }
