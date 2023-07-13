@@ -1,4 +1,5 @@
 
+#[cfg(feature="surreal_db")]
 use surrealdb::opt::auth;
 
 use super::ConfigAssets;
@@ -96,6 +97,7 @@ impl DbConnParams {
     /// generates ['surrealdb::opt::auth::Database`] from database connection parameters
     /// 
     /// ['surrealdb::opt::auth::Database`]: https://docs.rs/surrealdb/latest/surrealdb/opt/auth/struct.Database.html
+    #[cfg(feature="surreal_db")]
     pub fn surreal_auth(&self) -> auth::Database {
         let namespace = &self.instance.as_ref().expect("No namespace (instance) supplied for Surreal database");
         let database  = &self.database.as_ref().expect("No database supplied for Surreal database");
