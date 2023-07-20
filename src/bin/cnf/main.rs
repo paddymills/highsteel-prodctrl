@@ -15,7 +15,7 @@ use std::fs::File;
 use std::thread;
 use surrealdb::{
     Surreal,
-    engine::remote::{http::Https, ws::Ws},
+    engine::remote::http::Https,
     sql::Thing
 };
 use tokio::sync::mpsc;
