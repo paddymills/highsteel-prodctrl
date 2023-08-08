@@ -15,7 +15,7 @@ use std::fs::File;
 use std::thread;
 use surrealdb::{
     Surreal,
-    engine::remote::http::Https,
+    engine::remote::ws::Ws,
     sql::Thing
 };
 use tokio::sync::mpsc;
@@ -62,7 +62,9 @@ async fn main() -> Result<(), prodctrl::Error> {
 
     let config = DbConfig::from_embed().prodctrl;
     trace!("database config: {:?}", config);
-    let db = Surreal::new::<Https>(config.server.as_ref()).await?;
+    
+    // use websockest because sometimes on High's network, Http/Https fials.
+    let db = Surreal::new::<Ws>(config.server.as_ref()).await?;
     db.signin( config.surreal_auth() ).await?;
     db
         .use_ns(config.instance.unwrap())
