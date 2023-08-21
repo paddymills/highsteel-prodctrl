@@ -15,7 +15,7 @@ use std::fs::File;
 use std::thread;
 use surrealdb::{
     Surreal,
-    engine::remote::ws::Ws,
+    engine::remote::ws::{Ws, Client},
     sql::Thing
 };
 use tokio::sync::mpsc;
@@ -60,30 +60,27 @@ async fn main() -> Result<(), prodctrl::Error> {
         File::create(&log_file).expect("failed to create log")
     ).expect("Failed to init logger");
 
-    let config = DbConfig::from_embed().prodctrl;
-    trace!("database config: {:?}", config);
-    
-    // use websockest because sometimes on High's network, Http/Https fials.
-    let db = Surreal::new::<Ws>(config.server.as_ref()).await?;
-    db.signin( config.surreal_auth() ).await?;
-    db
-        .use_ns(config.instance.unwrap())
-        .use_db(config.database.unwrap())
-        .await?;
+    let db = connect_db().await.ok();
 
     let (tx, mut rx) = mpsc::channel(64);
     if args.upload_processed {
         debug!("getting processed filenames from database");
-        let mut result = db
-            .query("SELECT * FROM array::distinct((SELECT VALUE filename FROM prod_sent))")
-            .await?;
-        
-        let processed_files: Vec<String> = result.take(0)?;
 
-        thread::spawn(move || 
-            ProdFileProcessor::new(args.dry_run, tx)
-                .log_processed(processed_files).unwrap()
-        );
+        match &db {
+            Some(db) => {
+                let mut result = db
+                    .query("SELECT * FROM array::distinct((SELECT VALUE filename FROM prod_sent))")
+                    .await?;
+                
+                let processed_files: Vec<String> = result.take(0)?;
+        
+                thread::spawn(move || 
+                    ProdFileProcessor::new(args.dry_run, tx)
+                        .log_processed(processed_files).unwrap()
+                );
+            },
+            _ => return Err("failed to connect to database".into())
+        }
     }
     
     else {
@@ -96,20 +93,22 @@ async fn main() -> Result<(), prodctrl::Error> {
     // cache sent rows to db
     let mut hasher = Sha256::new();
     while let Some(res) = rx.recv().await {
-        // create id from (Mark, PartWbs, Program)
-        hasher.update(&res.record.mark);
-        hasher.update(&res.record.part_wbs);
-        hasher.update(&res.record.program);
-        let id = hex::encode( hasher.finalize_reset() );
-
-        let created: Result<Record, surrealdb::Error> = db
-            .update( ("prod_sent", id) )
-            .content(res)
-            .await;
-
-        match created {
-            Ok(c)  => { trace!("{:?}", c); },
-            Err(e) => { error!("{:?}", e); }
+        if let Some(db) = &db {
+            // create id from (Mark, PartWbs, Program)
+            hasher.update(&res.record.mark);
+            hasher.update(&res.record.part_wbs);
+            hasher.update(&res.record.program);
+            let id = hex::encode( hasher.finalize_reset() );
+    
+            let created: Result<Record, surrealdb::Error> = db
+                .update( ("prod_sent", id) )
+                .content(res)
+                .await;
+    
+            match created {
+                Ok(c)  => { trace!("{:?}", c); },
+                Err(e) => { error!("{:?}", e); }
+            }
         }
     }
 
@@ -119,4 +118,19 @@ async fn main() -> Result<(), prodctrl::Error> {
     }
     
     Ok(())
+}
+
+async fn connect_db() -> Result<Surreal<Client>, surrealdb::Error> {
+    let config = DbConfig::from_embed().prodctrl;
+    trace!("database config: {:?}", config);
+    
+    // use websockest because sometimes on High's network, Http/Https fails.
+    let db = Surreal::new::<Ws>(config.server.as_ref()).await?;
+    db.signin( config.surreal_auth() ).await?;
+    db
+        .use_ns(config.instance.unwrap())
+        .use_db(config.database.unwrap())
+        .await?;
+
+    Ok(db)
 }
