@@ -42,7 +42,8 @@ impl DbConfig {
     /// Creates a database config from embedded toml file
     pub fn from_embed() -> Self {
         ConfigAssets::get("db.toml")
-            .map(|asset| toml::from_slice(&asset.data))   
+            // .map(|asset| toml::from_slice(&asset.data))   
+            .map(|asset| toml::from_str(std::str::from_utf8(&asset.data).unwrap()))   
             // TODO: compile time asset existance check
             //       to make sure .unwrap() won't panic
             .unwrap()
